@@ -1,0 +1,126 @@
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'main.dart'; // so we can access seedColorNotifier & themeModeNotifier
+
+class SettingsPage extends StatelessWidget {
+  const SettingsPage({super.key});
+
+  // 1. Define your options in one place:
+  static const colorOptions = <String, Color>{
+    'Red Accent': Colors.redAccent,
+    'Pink Accent': Colors.pinkAccent,
+    'Purple Accent': Colors.purpleAccent,
+    'Deep Purple Accent': Colors.deepPurpleAccent,
+    'Indigo Accent': Colors.indigoAccent,
+    'Blue Accent': Colors.blueAccent,
+    'Light Blue Accent': Colors.lightBlueAccent,
+    'Cyan Accent': Colors.cyanAccent,
+    'Teal Accent': Colors.tealAccent,
+    'Green Accent': Colors.greenAccent,
+    'Light Green Accent': Colors.lightGreenAccent,
+    'Lime Accent': Colors.limeAccent,
+    'Yellow Accent': Colors.yellowAccent,
+    'Amber Accent': Colors.amberAccent,
+    'Orange Accent': Colors.orangeAccent,
+    'Deep Orange Accent': Colors.deepOrangeAccent,
+  };
+
+  Future<void> _pickSeedColor(BuildContext context) async {
+    // 2. Build & show the dialog dynamically:
+    final selected = await showDialog<Color>(
+      context: context,
+      builder: (_) => SimpleDialog(
+        title: const Text('Select theme color'),
+        children: colorOptions.entries.map((entry) {
+          return SimpleDialogOption(
+            onPressed: () => Navigator.pop(context, entry.value),
+            child: Row(
+              children: [
+                // color swatch
+                Container(width: 24, height: 24, color: entry.value),
+                const SizedBox(width: 12),
+                // label
+                Text(entry.key),
+              ],
+            ),
+          );
+        }).toList(),
+      ),
+    );
+
+    // 3. Persist & notify if they picked something:
+    if (selected != null) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('seedColor', selected.value);
+      seedColorNotifier.value = selected;
+    }
+  }
+
+
+  Future<void> _pickThemeMode(BuildContext context) async {
+    final mode = await showDialog<ThemeMode>(
+      context: context,
+      builder: (_) => SimpleDialog(
+        title: const Text('Select theme mode'),
+        children: [
+          SimpleDialogOption(
+            child: const Text('Light'),
+            onPressed: () => Navigator.pop(context, ThemeMode.light),
+          ),
+          SimpleDialogOption(
+            child: const Text('Dark'),
+            onPressed: () => Navigator.pop(context, ThemeMode.dark),
+          ),
+          SimpleDialogOption(
+            child: const Text('Follow System'),
+            onPressed: () => Navigator.pop(context, ThemeMode.system),
+          ),
+        ],
+      ),
+    );
+    if (mode != null) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('themeMode', mode.index);
+      themeModeNotifier.value = mode;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Settings'),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          ListTile(
+            leading: const Icon(Icons.person),
+            title: const Text('Account'),
+            onTap: () {
+              // …
+            },
+          ),
+          const Divider(),
+
+          // THEME COLOR ITEM
+          ListTile(
+            leading: const Icon(Icons.palette),
+            title: const Text('Theme Color'),
+            onTap: () => _pickSeedColor(context),
+          ),
+          const Divider(),
+
+          // DARK MODE ITEM
+          ListTile(
+            leading: const Icon(Icons.brightness_6),
+            title: const Text('Dark Mode'),
+            onTap: () => _pickThemeMode(context),
+          ),
+        ],
+      ),
+    );
+  }
+}
