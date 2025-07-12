@@ -2,9 +2,11 @@
 
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:horizontal_data_table/horizontal_data_table.dart';
+
+import 'models.dart';
+import 'opensist_api.dart' as api;
 
 
 Future<String> getCookie() async {
@@ -21,6 +23,7 @@ class ProgramsPage extends StatefulWidget {
 
 class _ProgramsPageState extends State<ProgramsPage> {
   bool _loading = false;
+  bool _errorBecauseOfLogin = false;
   final List<Map<String, String>> _rows = [];
   final ScrollController _horizontalController = ScrollController();
 
@@ -32,30 +35,38 @@ class _ProgramsPageState extends State<ProgramsPage> {
 
   Future<void> _fetchPrograms() async {
     setState(() => _loading = true);
+    _rows.clear();
     try {
-      final res = await http.post(
-        Uri.parse('https://opensist.tech/api/list/programs'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Connection': 'close',
-          'X-Content-Type-Options': 'nosniff',
-          'Cookie': await getCookie(),
-        },
-        body: json.encode({}),
-      );
+      final res = await api.fetchPrograms(await getCookie());
+      final body = json.decode(res.body) as Map<String, dynamic>;
 
-      final bodyJson = (json.decode(res.body) as Map<String, dynamic>)['data'];
-      // final dataList = (bodyJson['data'] as Map<String, List<Map<String, dynamic>>>);
+      if (body['success'] == false) {
+        print("Error authentication");
+        setState(() { _errorBecauseOfLogin = true; });
+        return;
+      }
+
+      // final data = json.decode(res.body)['data'] as Map<String, dynamic>;
+      // final records = data
+      //     .map((e) => AllPrograms.fromJson(e as Map<String, dynamic>))
+      //     .toList();
+
+      //
+      // final records = AllPrograms.fromJson(body);
+      // print(records.toString());
+      //
+      final bodyData = body['data'];
 
       // print(dataList as String?);
       // Expand each Program into one row per applicant
-      _rows.clear();
-
-      for (final listOfPrograms in bodyJson.values) {
+      for (final listOfPrograms in bodyData.values) {
         for (final programEntry in listOfPrograms) {
-          for (final applicant in programEntry['Applicants']) {
+          final programData = ProgramData.fromJson(programEntry as Map<String, dynamic>);
+          print(programData.toString());
+
+          for (final applicant in programData.Applicants) {
             _rows.add({
-              'ProgramID': programEntry['ProgramID'],
+              'ProgramID': programData.ProgramID,
               'Applicant': applicant,
             });
           }
@@ -74,110 +85,9 @@ class _ProgramsPageState extends State<ProgramsPage> {
     _horizontalController.dispose();
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
-    const double programIdColWidth = 200;
-    const double applicantColWidth = 200;
-    const double headerHeight = 56;
-    const double rowHeight    = 56;
-
-    return Scaffold(
-      appBar: AppBar(title: const Text('Programs')),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : Container(
-        // make sure the table background matches your scaffold
-        color: Theme.of(context).scaffoldBackgroundColor,
-        child: HorizontalDataTable(
-          leftHandSideColumnWidth:  programIdColWidth,
-          rightHandSideColumnWidth: applicantColWidth,
-          isFixedHeader:            true,
-          // enforce uniform heights
-          // tableHeight: rowHeight,
-
-          // ─── HEADER ─────────────────────────────────
-          headerWidgets: [
-            // left header
-            Container(
-              width: programIdColWidth,
-              height: headerHeight,
-              padding: const EdgeInsets.all(8),
-              alignment: Alignment.centerLeft,
-              color: Theme.of(context)
-                  .dividerColor
-                  .withOpacity(0.1),
-              child: Text(
-                'ProgramID',
-                style: Theme.of(context)
-                    .textTheme.titleMedium
-                    ?.copyWith(fontWeight: FontWeight.bold),
-              ),
-            ),
-            // right header
-            Container(
-              width: applicantColWidth,
-              height: headerHeight,
-              padding: const EdgeInsets.all(8),
-              alignment: Alignment.centerLeft,
-              color: Theme.of(context)
-                  .dividerColor
-                  .withOpacity(0.1),
-              child: Text(
-                'Applicant',
-                style: Theme.of(context)
-                    .textTheme.titleMedium
-                    ?.copyWith(fontWeight: FontWeight.bold),
-              ),
-            ),
-          ],
-
-          // ─── ROWS ────────────────────────────────────
-          itemCount: _rows.length,
-
-          leftSideItemBuilder: (context, index) {
-            final row = _rows[index];
-            return Container(
-              width: programIdColWidth,
-              height: rowHeight,
-              padding: const EdgeInsets.all(8),
-              alignment: Alignment.centerLeft,
-              child: Text(
-                row['ProgramID']!,
-                maxLines: 1,                    // single line
-                overflow: TextOverflow.ellipsis, // ellipsis
-                style: Theme.of(context)
-                    .textTheme.headlineMedium
-              ),
-            );
-          },
-
-          rightSideItemBuilder: (context, index) {
-            final row = _rows[index];
-            return Container(
-              width: applicantColWidth,
-              height: rowHeight,
-              padding: const EdgeInsets.all(8),
-              alignment: Alignment.centerLeft,
-              child: Text(
-                row['Applicant']!,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
-            );
-          },
-
-          // optional: a divider between each row
-          rowSeparatorWidget: Divider(
-            color: Theme.of(context).dividerColor,
-            height: 1,
-          ),
-        ),
-      ),
-    );
-  }
-  // @override
-  Widget build2(BuildContext context) {
     const double programIdColWidth = 200;
     const double applicantColWidth = 200;
     final double totalWidth = programIdColWidth + applicantColWidth;
@@ -267,6 +177,38 @@ class _ProgramsPageState extends State<ProgramsPage> {
         );
       },
     );
+
+    if (_errorBecauseOfLogin) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        // 弹窗后重置标志，避免重复弹出
+        setState(() => _errorBecauseOfLogin = false);
+        showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: const Text('Error'),
+              content: const Text('Failed to fetch programs. Have you logged in?'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    _fetchPrograms();
+                  },
+                  child: const Text('Retry'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    Navigator.of(context).pushNamed('/opensist_login');
+                  },
+                  child: const Text('Login'),
+                ),
+              ],
+            );
+          },
+        );
+      });
+    }
 
     return Scaffold(
       appBar: appBar,

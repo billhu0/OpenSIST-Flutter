@@ -5,6 +5,8 @@ import 'package:opensist_alpha/opensist_programs.dart';
 import 'package:opensist_alpha/page_home.dart';
 import 'package:opensist_alpha/page_settings.dart';
 
+import 'opensist_datapoints.dart';
+
 // Top‐level notifiers that the whole app listens to:
 final seedColorNotifier = ValueNotifier<Color>(Colors.blueAccent);
 final themeModeNotifier = ValueNotifier<ThemeMode>(ThemeMode.system);
@@ -57,6 +59,7 @@ class MyApp extends StatelessWidget {
                 '/settings': (context) => const SettingsPage(),
                 '/opensist_login': (context) => const LoginPage(),
                 '/opensist_program': (context) => const ProgramsPage(),
+                '/opensist_datapoints': (context) => const DatapointsPage(),
               },
             );
           },

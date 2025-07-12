@@ -94,6 +94,14 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               ListTile(
                 leading: const Icon(Icons.settings),
+                title: const Text('OpenSIST datapoints'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.pushNamed(context, '/opensist_datapoints');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.settings),
                 title: const Text('Settings'),
                 onTap: () {
                   Navigator.pop(context);

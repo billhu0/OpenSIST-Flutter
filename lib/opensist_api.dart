@@ -1,11 +1,14 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:opensist_alpha/models.dart';
 
 class ApiString {
   static const String root = "https://opensist.tech/";
   static const String programList = "${root}api/list/programs";
-  static const String login  = "${root}api/auth/login";
+  static const String login = "${root}api/auth/login";
+  static const GET_RECORD_BY_RECORD_IDs = "${root}api/query/by_records";
 }
 
 // const PROGRAM_DESC = ROOT + "api/query/program_description";
@@ -27,7 +30,7 @@ class ApiString {
 // const ADD_MODIFY_APPLICANT = ROOT + "api/mutating/new_modify_applicant";
 // const REMOVE_APPLICANT = ROOT + "api/mutating/remove_applicant";
 // const APPLICANT_LIST = ROOT + "api/list/applicants";
-// const GET_RECORD_BY_RECORD_IDs = ROOT + "api/query/by_records";
+//
 // const ADD_MODIFY_RECORD = ROOT + "api/mutating/new_modify_record";
 // const REMOVE_RECORD = ROOT + "api/mutating/remove_record";
 // const UPLOAD_AVATAR = ROOT + "api/user/upload_avatar";
@@ -55,6 +58,9 @@ class ApiString {
 // const GET_CONTENT_API = ROOT + "api/post/get_content";
 // const DELETE_CONTENT_API = ROOT + "api/post/delete_content";
 
+const timeoutDuration = Duration(seconds: 10);
+const timeoutErrorMessage = 'Timeout occurred while waiting for the server response.';
+
 Future<http.Response> login(final String email, final String password) async {
   final http.Response res = await http.post(
     Uri.parse(ApiString.login),
@@ -63,8 +69,78 @@ Future<http.Response> login(final String email, final String password) async {
       'Connection': 'close',
       'X-Content-Type-Options': 'nosniff',
     },
-    body: json.encode({'email': email, 'password': password})
-  );
+    body: json.encode({'email': email, 'password': password}),
+  ).timeout(timeoutDuration, onTimeout: () { throw TimeoutException(timeoutErrorMessage); });
   return res;
+}
+
+Future<http.Response> fetchPrograms(String cookie) async {
+  final response = await http.post(
+    Uri.parse(ApiString.programList),
+    headers: {
+      'Content-Type': 'application/json',
+      'Connection': 'close',
+      'X-Content-Type-Options': 'nosniff',
+      'Cookie': cookie,
+    },
+    body: json.encode({}),
+  ).timeout(timeoutDuration, onTimeout: () { throw TimeoutException(timeoutErrorMessage); });
+  return response;
+}
+
+Future<List<RecordData>> fetchDataPoints(String cookie) async {
+  final response = await fetchPrograms(cookie);
+  if (response.statusCode != 200) {
+    throw Exception('Failed to load programs');
+  }
+
+  final body = json.decode(response.body) as Map<String, dynamic>;
+  if (body['success'] == false) {
+    throw Exception('Authentication failed');
+  }
+
+  final bodyData = body['data'] as Map<String, dynamic>;
+
+  List<String> idsToFetch = [];
+  for (final listOfPrograms in bodyData.values) {
+    for (final programEntry in listOfPrograms) {
+      final programData = ProgramData.fromJson(programEntry as Map<String, dynamic>);
+      for (final applicant in programData.Applicants) {
+        // _rows.add({
+        //   'ProgramID': programData.ProgramID,
+        //   'Applicant': applicant,
+        // });
+        idsToFetch.add("$applicant|${programData.ProgramID}");
+      }
+    }
+  }
+  List<dynamic> recordDetailMaps = [];
+  const batchSize = 30;
+  for (int i = 0; i < idsToFetch.length; i += batchSize) {
+    // slice the list "idsToFetch" into a batch starting at i and ends at min(i + batchSize, idsToFetch.length);
+    final batch = idsToFetch.sublist(i, i + batchSize < idsToFetch.length ? i + batchSize : idsToFetch.length);
+    final response = await http.post(
+      Uri.parse(ApiString.GET_RECORD_BY_RECORD_IDs),
+      headers: {
+        'Content-Type': 'application/json',
+        'Connection': 'close',
+        'X-Content-Type-Options': 'nosniff',
+        'Cookie': cookie,
+      },
+      body: json.encode({'IDs': batch}),
+    ).timeout(timeoutDuration, onTimeout: () { throw TimeoutException(timeoutErrorMessage); });
+    if (response.statusCode != 200) {
+      throw Exception('Failed to load data points');
+    }
+    final responseBody = json.decode(response.body) as Map<String, dynamic>;
+    if (responseBody['success'] == false) {
+      throw Exception('Authentication failed');
+    }
+    final data = responseBody['data'] as Map<String, dynamic>;
+    for (final entry in data.entries) {
+      recordDetailMaps.add(RecordData.fromJson(entry.value as Map<String, dynamic>));
+    }
+  }
+  return recordDetailMaps.map((e) => e as RecordData).toList();
 }
 

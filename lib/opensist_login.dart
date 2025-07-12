@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -53,7 +54,7 @@ class _LoginPageState extends State<LoginPage> {
       if (res.headers['set-cookie'] != null) {
         String cookie = res.headers['set-cookie']!.split(';')[0];
         storeCookie(cookie);
-        print("Setting cookie: " + cookie);
+        debugPrint("Setting cookie: $cookie");
       }
     } catch (err) {
       _respBodyCtrl.text = 'Error: $err';
@@ -67,16 +68,7 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => _loading = true);
 
     try {
-      final res = await http.post(
-        Uri.parse('https://opensist.tech/api/list/programs'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Connection': 'close',
-          'X-Content-Type-Options': 'nosniff',
-          'Cookie': await getCookie(),
-        },
-        body: json.encode({}),
-      );
+      final res = await api.fetchPrograms(await getCookie());
 
       // pretty-print response body JSON
       final bodyJson = json.decode(res.body);
@@ -178,6 +170,21 @@ class _LoginPageState extends State<LoginPage> {
                     : const Text('Fetch Programs'),
               ),
             ),
+
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _loading ? null : _fetchPrograms,
+                child: _loading
+                    ? const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+                    : const Text('Fetch Programs'),
+              ),
+            ),
+
             const SizedBox(height: 24),
 
             // Response Headers
