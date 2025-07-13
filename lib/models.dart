@@ -145,3 +145,135 @@ class AllPrograms {
     };
   }
 }
+
+class Toefl {
+  final int total, s, r, l, w;
+  Toefl({
+    required this.total,
+    required this.s,
+    required this.r,
+    required this.l,
+    required this.w,
+  });
+
+  @override
+  String toString() {
+    return 'TOEFL(total: $total, speaking: $s, reading: $r, listening: $l, writing: $w)';
+  }
+}
+
+class Ielts {
+  final double total, s, r, l, w;
+  Ielts({
+    required this.total,
+    required this.s,
+    required this.r,
+    required this.l,
+    required this.w,
+  });
+
+  @override
+  String toString() {
+    return 'IELTS(total: $total, speaking: $s, reading: $r, listening: $l, writing: $w)';
+  }
+}
+
+class Gre {
+  final double total, v, q, aw;
+  Gre({
+    required this.total,
+    required this.v,
+    required this.q,
+    required this.aw,
+  });
+
+  @override
+  String toString() {
+    return 'GRE(total: $total, verbal: $v, quantitative: $q, analytic writing: $aw)';
+  }
+}
+
+class Applicant {
+  final String applicantID;
+  final String gender;
+  final String currentDegree;
+  final int applicationYear;
+  final String major;
+  final double gpa;
+  final String ranking;
+  final Gre? gre;
+  final Toefl? toefl;
+  final Ielts? ielts;
+
+  Applicant({
+    required this.applicantID,
+    required this.gender,
+    required this.currentDegree,
+    required this.applicationYear,
+    required this.major,
+    required this.gpa,
+    required this.ranking,
+    this.gre,
+    this.toefl,
+    this.ielts,
+  });
+
+  factory Applicant.fromJson(Map<String, dynamic> json) => Applicant(
+    applicantID: json['ApplicantID'] as String,
+    gender: json['Gender'] as String,
+    currentDegree: json['CurrentDegree'] as String,
+    applicationYear: json['ApplicationYear'] as int,
+    major: json['Major'] as String,
+    gpa: (json['GPA'] as num).toDouble(),
+    ranking: json['Ranking'] as String,
+    gre: json['GRE'] != null
+        ? Gre(
+            total: (json['GRE']['Total'] as num).toDouble(),
+            v: (json['GRE']['V'] as num).toDouble(),
+            q: (json['GRE']['Q'] as num).toDouble(),
+            aw: (json['GRE']['AW'] as num).toDouble(),
+          )
+        : null,
+    toefl: json['EnglishProficiency']['TOEFL'] != null
+        ? Toefl(
+            total: json['EnglishProficiency']['TOEFL']['Total'] as int,
+            s: json['EnglishProficiency']['TOEFL']['S'] as int,
+            r: json['EnglishProficiency']['TOEFL']['R'] as int,
+            l: json['EnglishProficiency']['TOEFL']['L'] as int,
+            w: json['EnglishProficiency']['TOEFL']['W'] as int,
+          )
+        : null,
+  );
+
+  Map<String, dynamic> toJson() => {
+    'ApplicantID': applicantID,
+    'Gender': gender,
+    'CurrentDegree': currentDegree,
+    'ApplicationYear': applicationYear,
+    'Major': major,
+    'GPA': gpa,
+    'Ranking': ranking,
+    'GRE': gre != null ? {
+      'Total': gre!.total,
+      'V': gre!.v,
+      'Q': gre!.q,
+      'AW': gre!.aw,
+    } : null,
+    'EnglishProficiency': {
+      'Toefl': toefl != null ? {
+        'Total': toefl!.total,
+        'S': toefl!.s,
+        'R': toefl!.r,
+        'L': toefl!.l,
+        'W': toefl!.w,
+      } : null,
+      'Ielts': ielts != null ? {
+        'Total': ielts!.total,
+        'S': ielts!.s,
+        'R': ielts!.r,
+        'L': ielts!.l,
+        'W': ielts!.w,
+      } : null,
+    },
+  };
+}

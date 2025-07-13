@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:opensist_alpha/models.dart';
+import 'package:opensist_alpha/opensist_applicant.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:opensist_alpha/opensist_login.dart';
 import 'package:opensist_alpha/opensist_programs.dart';
 import 'package:opensist_alpha/page_home.dart';
 import 'package:opensist_alpha/page_settings.dart';
 
+import 'opensist_applicants.dart';
 import 'opensist_datapoints.dart';
 
 // Top‐level notifiers that the whole app listens to:
@@ -60,6 +63,31 @@ class MyApp extends StatelessWidget {
                 '/opensist_login': (context) => const LoginPage(),
                 '/opensist_program': (context) => const ProgramsPage(),
                 '/opensist_datapoints': (context) => const DatapointsPage(),
+                '/opensist_applicants': (context) => const ApplicantsPage(),
+              },
+              onGenerateRoute: (settings) {
+                if (settings.name == '/opensist_applicant') {
+                  if (settings.arguments is String) {
+                    return MaterialPageRoute(
+                      builder: (context) => ApplicantPage(applicantId: settings.arguments as String),
+                    );
+                  }
+                  else if (settings.arguments is Applicant) {
+                    return MaterialPageRoute(
+                      builder: (context) => ApplicantPage(
+                        applicantId: (settings.arguments as Applicant).applicantID,
+                        applicant: settings.arguments as Applicant,
+                      ),
+                    );
+                  }
+                }
+                // Handle unknown routes gracefully
+                return MaterialPageRoute(
+                  builder: (context) => Scaffold(
+                    appBar: AppBar(title: const Text('Unknown Route')),
+                    body: Center(child: Text('No route defined for ${settings.name}')),
+                  ),
+                );
               },
             );
           },

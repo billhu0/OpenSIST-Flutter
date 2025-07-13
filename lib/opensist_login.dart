@@ -34,6 +34,8 @@ class _LoginPageState extends State<LoginPage> {
   final _respHdrCtrl = TextEditingController();
   bool _loading = false;
 
+  String selectedFetch = 'Fetch Programs';
+
   Future<void> _login() async {
     final email = _emailCtrl.text.trim();
     final pass = _passwordCtrl.text;
@@ -87,6 +89,38 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  Future<void> _fetchApplicants() async {
+    setState(() => _loading = true);
+
+    try {
+      final res = await http.post(
+        Uri.parse("https://opensist.tech/api/list/applicants"),
+        headers: {
+          'Content-Type': 'application/json',
+          'Connection': 'close',
+          'X-Content-Type-Options': 'nosniff',
+          'Cookie': await getCookie(),
+        },
+        body: json.encode({}),
+      );
+
+      // pretty-print response body JSON
+      final bodyJson = json.decode(res.body);
+      _respBodyCtrl.text = const JsonEncoder.withIndent('  ').convert(bodyJson);
+
+      // format headers map into lines
+      final hdrLines = res.headers.entries
+          .map((e) => '${e.key}: ${e.value}')
+          .join('\n');
+      _respHdrCtrl.text = hdrLines;
+    } catch (err) {
+      _respBodyCtrl.text = 'Error: $err';
+      _respHdrCtrl.text = '';
+    } finally {
+      setState(() => _loading = false);
+    }
+  }
+
   @override
   void dispose() {
     _emailCtrl.dispose();
@@ -98,6 +132,7 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       appBar: AppBar(title: const Text('Login')),
       body: Padding(
@@ -156,32 +191,50 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
 
-            // Fetch Program button
+            const SizedBox(height: 12),
+
             SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _loading ? null : _fetchPrograms,
-                child: _loading
-                    ? const SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-                    : const Text('Fetch Programs'),
+              // width: double.infinity,
+              child: DropdownButtonFormField<String>(
+                value: selectedFetch,
+                decoration: InputDecoration(
+                  labelText: 'Fetch Options',
+                  border: OutlineInputBorder(),
+                ),
+                items: [
+                  'Fetch Programs',
+                  'Fetch Applicants',
+                ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+                onChanged: (val) {
+                  if (val == null) return;
+                  setState(() { selectedFetch = val; });
+                },
               ),
             ),
 
+            // Single action button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: _loading ? null : _fetchPrograms,
+                onPressed: _loading
+                    ? null
+                    : () {
+                  switch (selectedFetch) {
+                    case 'Fetch Programs':
+                      _fetchPrograms();
+                      break;
+                    case 'Fetch Applicants':
+                      _fetchApplicants();
+                      break;
+                  }
+                },
                 child: _loading
                     ? const SizedBox(
                   width: 24,
                   height: 24,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-                    : const Text('Fetch Programs'),
+                    : Text(selectedFetch),
               ),
             ),
 

@@ -177,6 +177,7 @@ class _DatapointsPageState extends State<DatapointsPage> {
                                 onTap: () {
                                   // TODO: 点击 Applicant
                                   print("clicked applicant: ${record.applicantID}\n");
+                                  Navigator.pushNamed(context, '/opensist_applicant', arguments: record.applicantID);
                                 },
                                 child: Text(
                                   record.applicantID,

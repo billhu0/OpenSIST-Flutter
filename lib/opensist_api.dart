@@ -5,10 +5,11 @@ import 'package:http/http.dart' as http;
 import 'package:opensist_alpha/models.dart';
 
 class ApiString {
-  static const String root = "https://opensist.tech/";
-  static const String programList = "${root}api/list/programs";
-  static const String login = "${root}api/auth/login";
-  static const GET_RECORD_BY_RECORD_IDs = "${root}api/query/by_records";
+  static const root = "https://opensist.tech/";
+  static const programList = "${root}api/list/programs";
+  static const login = "${root}api/auth/login";
+  static const getRecordsByRecordIds = "${root}api/query/by_records";
+  static const applicantList = "${root}api/list/applicants";
 }
 
 // const PROGRAM_DESC = ROOT + "api/query/program_description";
@@ -88,6 +89,31 @@ Future<http.Response> fetchPrograms(String cookie) async {
   return response;
 }
 
+Future<List<Applicant>> fetchApplicants(String cookie) async {
+  final response = await http.post(
+    Uri.parse(ApiString.applicantList),
+    headers: {
+      'Content-Type': 'application/json',
+      'Connection': 'close',
+      'X-Content-Type-Options': 'nosniff',
+      'Cookie': cookie,
+    },
+    body: json.encode({}),
+  ).timeout(timeoutDuration, onTimeout: () { throw TimeoutException(timeoutErrorMessage); });
+
+  if (response.statusCode != 200) {
+    throw Exception('Failed to load applicants');
+  }
+
+  final body = json.decode(response.body) as Map<String, dynamic>;
+  if (body['success'] == false) {
+    throw Exception('Authentication failed');
+  }
+
+  final data = body['data'] as List<dynamic>;
+  return data.map((e) => Applicant.fromJson(e as Map<String, dynamic>)).toList();
+}
+
 Future<List<RecordData>> fetchDataPoints(String cookie) async {
   final response = await fetchPrograms(cookie);
   if (response.statusCode != 200) {
@@ -115,12 +141,12 @@ Future<List<RecordData>> fetchDataPoints(String cookie) async {
     }
   }
   List<dynamic> recordDetailMaps = [];
-  const batchSize = 30;
+  const batchSize = 100;
   for (int i = 0; i < idsToFetch.length; i += batchSize) {
     // slice the list "idsToFetch" into a batch starting at i and ends at min(i + batchSize, idsToFetch.length);
     final batch = idsToFetch.sublist(i, i + batchSize < idsToFetch.length ? i + batchSize : idsToFetch.length);
     final response = await http.post(
-      Uri.parse(ApiString.GET_RECORD_BY_RECORD_IDs),
+      Uri.parse(ApiString.getRecordsByRecordIds),
       headers: {
         'Content-Type': 'application/json',
         'Connection': 'close',
