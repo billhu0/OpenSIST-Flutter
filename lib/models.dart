@@ -8,9 +8,9 @@ class Timeline {
   Timeline({this.decision, this.interview, this.submit});
 
   factory Timeline.fromJson(Map<String, dynamic> json) => Timeline(
-    decision: json['Decision'] as String?,
-    interview: json['Interview'] as String?,
-    submit: json['Submit'] as String?,
+    decision: (json['Decision'] as String?)?.split('T').first,
+    interview: (json['Interview'] as String?)?.split('T').first,
+    submit: (json['Submit'] as String?)?.split('T').first,
   );
 
   Map<String, dynamic> toJson() => {

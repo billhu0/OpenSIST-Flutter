@@ -61,8 +61,13 @@ class _DatapointsPageState extends State<DatapointsPage> {
     const double statusColWidth = 90;
     const double finalColWidth = 70;
     const double seasonWidth = 100;
+    const double timelineDecisionWidth = 120;
+    const double timelineInterviewWidth = 120;
+    const double timelineApplicationWidth = 120;
+    const double detailWidth = 300;
     final double totalWidth = (
-      programIdColWidth + applicantColWidth + statusColWidth + finalColWidth + seasonWidth
+      programIdColWidth + applicantColWidth + statusColWidth + finalColWidth + seasonWidth +
+        timelineDecisionWidth + timelineInterviewWidth + timelineApplicationWidth + detailWidth
     );
 
     final statusColor = {
@@ -145,6 +150,46 @@ class _DatapointsPageState extends State<DatapointsPage> {
                           ),
                         ),
                       ),
+                      SizedBox(
+                        width: timelineDecisionWidth,
+                        child: Padding(
+                          padding: EdgeInsets.all(8),
+                          child: Text(
+                            'Decision',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: timelineInterviewWidth,
+                        child: Padding(
+                          padding: EdgeInsets.all(8),
+                          child: Text(
+                            'Interview',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: timelineApplicationWidth,
+                        child: Padding(
+                          padding: EdgeInsets.all(8),
+                          child: Text(
+                            'Application',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: detailWidth,
+                        child: Padding(
+                          padding: EdgeInsets.all(8),
+                          child: Text(
+                            'Details',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -219,6 +264,34 @@ class _DatapointsPageState extends State<DatapointsPage> {
                             child: Padding(
                               padding: const EdgeInsets.all(8),
                               child: Text('${record.semester.name} ${record.programYear}'),
+                            ),
+                          ),
+                          SizedBox(
+                            width: timelineDecisionWidth,
+                            child: Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: Text(record.timeline.decision ?? ''),
+                            ),
+                          ),
+                          SizedBox(
+                            width: timelineInterviewWidth,
+                            child: Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: Text(record.timeline.interview ?? ''),
+                            ),
+                          ),
+                          SizedBox(
+                            width: timelineApplicationWidth,
+                            child: Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: Text(record.timeline.submit ?? ''),
+                            ),
+                          ),
+                          SizedBox(
+                            width: detailWidth,
+                            child: Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: Text(record.detail ?? ''),
                             ),
                           ),
                         ],
