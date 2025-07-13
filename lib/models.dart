@@ -193,6 +193,84 @@ class Gre {
   }
 }
 
+class ExperienceDetail {
+  final int num;
+  final String detail;
+
+  ExperienceDetail({required this.num, required this.detail});
+
+  factory ExperienceDetail.fromJson(Map<String, dynamic> json) => ExperienceDetail(
+    num: json['Num'] as int,
+    detail: json['Detail'] as String,
+  );
+
+  Map<String, dynamic> toJson() => {
+    'Num': num,
+    'Detail': detail,
+  };
+}
+
+class Exchange {
+  final String university;
+  final String duration;
+  final String detail;
+
+  Exchange({required this.university, required this.duration, required this.detail});
+
+  factory Exchange.fromJson(Map<String, dynamic> json) => Exchange(
+    university: json['University'] as String,
+    duration: json['Duration'] as String,
+    detail: json['Detail'] as String,
+  );
+
+  Map<String, dynamic> toJson() => {
+    'University': university,
+    'Duration': duration,
+    'Detail': detail,
+  };
+}
+
+class Research {
+  final String focus;
+  final ExperienceDetail domestic;
+  final ExperienceDetail international;
+
+  Research({
+    required this.focus,
+    required this.domestic,
+    required this.international,
+  });
+
+  factory Research.fromJson(Map<String, dynamic> json) => Research(
+    focus: json['Focus'] as String,
+    domestic: ExperienceDetail.fromJson(json['Domestic'] as Map<String, dynamic>),
+    international: ExperienceDetail.fromJson(json['International'] as Map<String, dynamic>),
+  );
+
+  Map<String, dynamic> toJson() => {
+    'Focus': focus,
+    'Domestic': domestic.toJson(),
+    'International': international.toJson(),
+  };
+}
+
+class Internship {
+  final ExperienceDetail domestic;
+  final ExperienceDetail international;
+
+  Internship({required this.domestic, required this.international});
+
+  factory Internship.fromJson(Map<String, dynamic> json) => Internship(
+    domestic: ExperienceDetail.fromJson(json['Domestic'] as Map<String, dynamic>),
+    international: ExperienceDetail.fromJson(json['International'] as Map<String, dynamic>),
+  );
+
+  Map<String, dynamic> toJson() => {
+    'Domestic': domestic.toJson(),
+    'International': international.toJson(),
+  };
+}
+
 class Applicant {
   final String applicantID;
   final String gender;
@@ -204,6 +282,12 @@ class Applicant {
   final Gre? gre;
   final Toefl? toefl;
   final Ielts? ielts;
+  final List<Exchange>? exchange;
+  final Research? research;
+  final Internship? internship;
+  final String finalSelection;
+  final Map<String, Status> programs;
+  // final List<String> posts;
 
   Applicant({
     required this.applicantID,
@@ -216,6 +300,12 @@ class Applicant {
     this.gre,
     this.toefl,
     this.ielts,
+    this.exchange,
+    this.research,
+    this.internship,
+    required this.finalSelection,
+    required this.programs,
+    // required this.posts,
   });
 
   factory Applicant.fromJson(Map<String, dynamic> json) => Applicant(
@@ -243,6 +333,15 @@ class Applicant {
             w: json['EnglishProficiency']['TOEFL']['W'] as int,
           )
         : null,
+    exchange: json['Exchange'] != null ? (json['Exchange'] as List<dynamic>)
+        .map((e) => Exchange.fromJson(e as Map<String, dynamic>))
+        .toList() : [],
+    research: json['Research'] != null ? Research.fromJson(json['Research'] as Map<String, dynamic>) : null,
+    internship: json['Internship'] != null ? Internship.fromJson(json['Internship'] as Map<String, dynamic>) : null,
+    finalSelection: json['Final'] as String,
+    programs: json['Programs'] != null ? (json['Programs'] as Map<String, dynamic>)
+        .map((k, v) => MapEntry(k, Status.values.byName(v as String)))
+    : {},
   );
 
   Map<String, dynamic> toJson() => {
@@ -275,5 +374,10 @@ class Applicant {
         'W': ielts!.w,
       } : null,
     },
+    'Exchange': exchange?.map((e) => e.toJson()).toList(),
+    'Research': research?.toJson(),
+    'Internship': internship?.toJson(),
+    'Final': finalSelection,
+    'Programs': programs.map((k, v) => MapEntry(k, v.name)),
   };
 }

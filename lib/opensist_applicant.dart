@@ -67,6 +67,13 @@ class _ApplicantPageState extends State<ApplicantPage> {
     }
   }
 
+  final statusColor = {
+    Status.Admit: Colors.green,
+    Status.Reject: Colors.red,
+    Status.Defer: Colors.orange,
+    Status.Waitlist: Colors.grey,
+  };
+
   @override
   Widget build(BuildContext context) {
     final appBar = AppBar(
@@ -109,12 +116,16 @@ class _ApplicantPageState extends State<ApplicantPage> {
               showValueIndicator: ShowValueIndicator.always,
             ),
             child: Slider(
-              value: 100 - double.parse(applicant!.ranking),
+              value: 100 - double.parse(applicant!.ranking == '50+' ? '50' : applicant!.ranking),
               max: 100,
               onChanged: (double value) {},
               label: "Ranks top ${applicant!.ranking}%",
               year2023: false,
             ),
+          ),
+          ListTile(
+            title: Text("Final Selection"),
+            subtitle: Text(applicant!.finalSelection != "" ? applicant!.finalSelection : 'No data'),
           ),
           // applicant!.gre != null ? ListTile(
           //   title: Text("GRE"),
@@ -149,7 +160,57 @@ class _ApplicantPageState extends State<ApplicantPage> {
                 ),
             ],
           ),
-
+          ExpansionTile(
+            initiallyExpanded: true,
+            title: Text("${applicant!.exchange?.length} 3+1 Exchange Experience"),
+            children: applicant!.exchange?.map((exchange) => ListTile(
+              title: Text("${exchange.university}, ${exchange.duration == "Year" ? '1 Year' : '1 Semester'}"),
+              subtitle: Text((exchange.detail != "") ? exchange.detail : 'No details provided'),
+            )).toList() ?? [],
+          ),
+          ExpansionTile(
+            initiallyExpanded: true,
+            title: Text("Research Experience: ${applicant!.research?.domestic.num} domestic, ${applicant!.research?.international.num} intl"),
+            children: [
+              ListTile(
+                title: Text('Focus'),
+                subtitle: Text(applicant!.research?.focus ?? 'No focus provided'),
+              ),
+              ListTile(
+                title: Text('${applicant!.research?.domestic.num} Domestic Research'),
+                subtitle: Text(applicant!.research?.domestic.detail ?? 'No domestic research details provided'),
+              ),
+              ListTile(
+                title: Text('${applicant!.research?.international.num} International Research'),
+                subtitle: Text(applicant!.research?.international.detail ?? 'No international research details provided'),
+              ),
+            ]
+          ),
+          applicant!.internship == null ? const SizedBox.shrink() :
+          ExpansionTile(
+              initiallyExpanded: true,
+              title: Text("Internship Experience: ${applicant!.internship?.domestic.num} domestic, ${applicant!.internship?.international.num} intl"),
+              children: [
+                ListTile(
+                  title: Text('${applicant!.internship?.domestic.num} Domestic internship'),
+                  subtitle: Text(applicant!.internship?.domestic.detail ?? 'No domestic internship details provided'),
+                ),
+                ListTile(
+                  title: Text('${applicant!.internship?.international.num} International internship'),
+                  subtitle: Text(applicant!.internship?.international.detail ?? 'No international internship details provided'),
+                ),
+              ]
+          ),
+          ExpansionTile(
+            initiallyExpanded: true,
+            title: Text("Application Results"),
+            children: applicant!.programs.entries.map((entry) =>
+              Chip(
+                label: Text("${entry.key} - ${entry.value.name}", style: TextStyle(color: Colors.white)),
+                backgroundColor: statusColor[entry.value] ?? Colors.grey,
+              )
+            ).toList()
+          ),
         ],
       )
     );

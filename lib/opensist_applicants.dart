@@ -71,7 +71,7 @@ class _ApplicantsPageState extends State<ApplicantsPage> {
               _genderToIcon(applicant.gender),
             ],
           ),
-          subtitle: Text('Status: ${applicant.toJson().toString()}'),
+          subtitle: Text('${applicant.applicationYear}'),
           onTap: () {
             Navigator.of(context).pushNamed('/opensist_applicant', arguments: applicant);
           },
