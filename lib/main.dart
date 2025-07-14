@@ -4,6 +4,7 @@ import 'package:opensist_alpha/opensist_applicant.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:opensist_alpha/opensist_login.dart';
 import 'package:opensist_alpha/opensist_programs.dart';
+import 'opensist_program.dart';
 import 'package:opensist_alpha/page_home.dart';
 import 'package:opensist_alpha/page_settings.dart';
 
@@ -58,10 +59,10 @@ class MyApp extends StatelessWidget {
               themeMode: themeMode,
               initialRoute: '/',
               routes: {
-                '/': (context) => const MyHomePage(title: 'My Flutter App'),
+                '/': (context) => const MyHomePage(title: 'OpenSIST'),
                 '/settings': (context) => const SettingsPage(),
                 '/opensist_login': (context) => const LoginPage(),
-                '/opensist_program': (context) => const ProgramsPage(),
+                '/opensist_programs': (context) => const ProgramsPage(),
                 '/opensist_datapoints': (context) => const DatapointsPage(),
                 '/opensist_applicants': (context) => const ApplicantsPage(),
               },
@@ -77,6 +78,23 @@ class MyApp extends StatelessWidget {
                       builder: (context) => ApplicantPage(
                         applicantId: (settings.arguments as Applicant).applicantID,
                         applicant: settings.arguments as Applicant,
+                      ),
+                    );
+                  }
+                }
+                else if (settings.name == '/opensist_program') {
+                  if (settings.arguments is ProgramData) {
+                    return MaterialPageRoute(
+                      builder: (context) => ProgramPage(
+                        programName: (settings.arguments as ProgramData).ProgramID,
+                        program: settings.arguments as ProgramData,
+                      )
+                    );
+                  } else if (settings.arguments is String) {
+                    return MaterialPageRoute(
+                      builder: (context) => ProgramPage(
+                        programName: settings.arguments as String,
+                        program: null, // ProgramData will be fetched in initState
                       ),
                     );
                   }

@@ -10,6 +10,7 @@ class ApiString {
   static const login = "${root}api/auth/login";
   static const getRecordsByRecordIds = "${root}api/query/by_records";
   static const applicantList = "${root}api/list/applicants";
+  static const programDescription = "${root}api/query/program_description";
 }
 
 // const PROGRAM_DESC = ROOT + "api/query/program_description";
@@ -75,7 +76,7 @@ Future<http.Response> login(final String email, final String password) async {
   return res;
 }
 
-Future<http.Response> fetchPrograms(String cookie) async {
+Future<http.Response> fetchProgramsLegacy(String cookie) async {
   final response = await http.post(
     Uri.parse(ApiString.programList),
     headers: {
@@ -87,6 +88,59 @@ Future<http.Response> fetchPrograms(String cookie) async {
     body: json.encode({}),
   ).timeout(timeoutDuration, onTimeout: () { throw TimeoutException(timeoutErrorMessage); });
   return response;
+}
+
+Future<Map<String, List<ProgramData>>> fetchPrograms(String cookie) async {
+  final response = await http.post(
+    Uri.parse(ApiString.programList),
+    headers: {
+      'Content-Type': 'application/json',
+      'Connection': 'close',
+      'X-Content-Type-Options': 'nosniff',
+      'Cookie': cookie,
+    },
+    body: json.encode({}),
+  ).timeout(timeoutDuration, onTimeout: () { throw TimeoutException(timeoutErrorMessage); });
+  if (response.statusCode != 200) {
+    throw Exception('Failed to load programs');
+  }
+  final body = json.decode(response.body) as Map<String, dynamic>;
+  if (body['success'] == false) {
+    throw Exception('Authentication failed');
+  }
+
+  final bodyData = body['data'] as Map<String, dynamic>;
+  Map<String, List<ProgramData>> programsMap = {};
+  for (final entry in bodyData.entries) {
+    final university = entry.key;
+    final programsList = entry.value as List<dynamic>;
+    programsMap[university] = programsList.map((e) => ProgramData.fromJson(e as Map<String, dynamic>)).toList();
+  }
+  return programsMap;
+}
+
+Future<String> fetchProgramDescription(String programId, String cookie) async {
+  final response = await http.post(
+    Uri.parse(ApiString.programDescription),
+    headers: {
+      'Content-Type': 'application/json',
+      'Connection': 'close',
+      'X-Content-Type-Options': 'nosniff',
+      'Cookie': cookie,
+    },
+    body: json.encode({'ProgramID': programId}),
+  ).timeout(timeoutDuration, onTimeout: () { throw TimeoutException(timeoutErrorMessage); });
+
+  if (response.statusCode != 200) {
+    throw Exception('Failed to load program description');
+  }
+
+  final body = json.decode(response.body) as Map<String, dynamic>;
+  if (body['success'] == false) {
+    throw Exception('Authentication failed');
+  }
+
+  return body['description'] as String;
 }
 
 Future<List<Applicant>> fetchApplicants(String cookie) async {
@@ -115,7 +169,7 @@ Future<List<Applicant>> fetchApplicants(String cookie) async {
 }
 
 Future<List<RecordData>> fetchDataPoints(String cookie) async {
-  final response = await fetchPrograms(cookie);
+  final response = await fetchProgramsLegacy(cookie);
   if (response.statusCode != 200) {
     throw Exception('Failed to load programs');
   }

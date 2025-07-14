@@ -32,12 +32,15 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordCtrl = TextEditingController();
   final _respBodyCtrl = TextEditingController();
   final _respHdrCtrl = TextEditingController();
+
+  final _argCtrl = TextEditingController();
   bool _loading = false;
 
   String selectedFetch = 'Fetch Programs';
+  String selectedEmailSuffix = '@shanghaitech.edu.cn';
 
   Future<void> _login() async {
-    final email = _emailCtrl.text.trim();
+    final email = _emailCtrl.text.trim() + selectedEmailSuffix;
     final pass = _passwordCtrl.text;
     setState(() => _loading = true);
 
@@ -70,7 +73,7 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => _loading = true);
 
     try {
-      final res = await api.fetchPrograms(await getCookie());
+      final res = await api.fetchProgramsLegacy(await getCookie());
 
       // pretty-print response body JSON
       final bodyJson = json.decode(res.body);
@@ -140,14 +143,39 @@ class _LoginPageState extends State<LoginPage> {
         child: Column(
           children: [
             // Email
-            TextField(
-              controller: _emailCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Email',
-                border: OutlineInputBorder(),
-              ),
-              keyboardType: TextInputType.emailAddress,
+            Row(
+              children: [
+                Expanded(flex: 1, child: TextField(
+                  controller: _emailCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
+                    // border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.emailAddress,
+                  autocorrect: false,
+                ),),
+                Expanded(flex: 2, child: SizedBox(
+                  // width: double.infinity,
+                  child: DropdownButtonFormField<String>(
+                    value: selectedEmailSuffix,
+                    decoration: InputDecoration(
+                      labelText: 'Suffix',
+                      border: UnderlineInputBorder(),
+                    ),
+                    items: [
+                      '@shanghaitech.edu.cn',
+                      '@alumni.shanghaitech.edu.cn',
+                    ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+                    onChanged: (val) {
+                      if (val == null) return;
+                      setState(() { selectedEmailSuffix = val; });
+                    },
+                  ),
+                ),),
+
+              ],
             ),
+
             const SizedBox(height: 16),
 
             // Password
@@ -155,7 +183,7 @@ class _LoginPageState extends State<LoginPage> {
               controller: _passwordCtrl,
               decoration: const InputDecoration(
                 labelText: 'Password',
-                border: OutlineInputBorder(),
+                // border: OutlineInputBorder(),
               ),
               obscureText: true,
             ),
@@ -166,13 +194,7 @@ class _LoginPageState extends State<LoginPage> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: _loading ? null : _login,
-                child: _loading
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('Login'),
+                child: const Text('Login'),
               ),
             ),
 
@@ -181,17 +203,12 @@ class _LoginPageState extends State<LoginPage> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: _loading ? null : clearCookie,
-                child: _loading
-                    ? const SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-                    : const Text('Clear Cookie (Logout)'),
+                child: const Text('Logout (Clear Cookie)'),
               ),
             ),
 
             const SizedBox(height: 12),
+            const Text('Everything below is only for testing.'),
 
             SizedBox(
               // width: double.infinity,
@@ -199,11 +216,12 @@ class _LoginPageState extends State<LoginPage> {
                 value: selectedFetch,
                 decoration: InputDecoration(
                   labelText: 'Fetch Options',
-                  border: OutlineInputBorder(),
+                  border: UnderlineInputBorder(),
                 ),
                 items: [
                   'Fetch Programs',
                   'Fetch Applicants',
+                  'Fetch Program',
                 ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
                 onChanged: (val) {
                   if (val == null) return;
@@ -212,31 +230,45 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
 
-            // Single action button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _loading
-                    ? null
-                    : () {
-                  switch (selectedFetch) {
-                    case 'Fetch Programs':
-                      _fetchPrograms();
-                      break;
-                    case 'Fetch Applicants':
-                      _fetchApplicants();
-                      break;
-                  }
-                },
-                child: _loading
-                    ? const SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-                    : Text(selectedFetch),
-              ),
+            Row(
+              children: [
+                Expanded(
+                  flex: 1,
+                  child: TextField(
+                    controller: _argCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Argument',
+                    ),
+                    enabled: selectedFetch == 'Fetch Program',
+                  ),
+                ),
+                const SizedBox(width: 8,),
+                Expanded(
+                  flex: 1,
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _loading ? null : () {
+                        switch (selectedFetch) {
+                          case 'Fetch Programs':
+                            _fetchPrograms();
+                            break;
+                          case 'Fetch Applicants':
+                            _fetchApplicants();
+                            break;
+                          case 'Fetch Program':
+                          // This case is not implemented, but can be added later
+                            debugPrint("Fetch Program not implemented");
+                            break;
+                        }
+                      },
+                      child: Text(selectedFetch),
+                    ),
+                  ),
+                ),
+              ],
             ),
+
 
             const SizedBox(height: 24),
 

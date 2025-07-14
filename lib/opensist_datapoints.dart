@@ -211,7 +211,14 @@ class _DatapointsPageState extends State<DatapointsPage> {
                             width: programIdColWidth,
                             child: Padding(
                               padding: const EdgeInsets.all(8),
-                              child: Text(record.programID),
+                              child: InkWell(
+                                onTap: () {
+                                  Navigator.pushNamed(context, '/opensist_program', arguments: record.programID);
+                                },
+                                child: Text(
+                                  record.programID,
+                                ),
+                              ),
                             ),
                           ),
                           SizedBox(
@@ -220,8 +227,6 @@ class _DatapointsPageState extends State<DatapointsPage> {
                               padding: const EdgeInsets.all(8),
                               child: InkWell(
                                 onTap: () {
-                                  // TODO: 点击 Applicant
-                                  print("clicked applicant: ${record.applicantID}\n");
                                   Navigator.pushNamed(context, '/opensist_applicant', arguments: record.applicantID);
                                 },
                                 child: Text(
