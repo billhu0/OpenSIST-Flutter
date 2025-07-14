@@ -4,6 +4,68 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'opensist_api.dart' as api;
 
 
+class ApplicantSearchDelegate extends SearchDelegate<Applicant?> {
+  final List<Applicant> applicants;
+  ApplicantSearchDelegate({required this.applicants});
+
+  @override
+  List<Widget>? buildActions(BuildContext context) {
+    return [
+      if (query.isNotEmpty)
+        IconButton(
+          icon: const Icon(Icons.clear),
+          onPressed: () => query = '',
+        ),
+    ];
+  }
+
+  @override
+  Widget? buildLeading(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.arrow_back),
+      onPressed: () => close(context, null),
+    );
+  }
+
+  @override
+  Widget buildResults(BuildContext context) {
+    final lower = query.toLowerCase();
+    final results = applicants.where((a) {
+      final id = a.applicantID.toLowerCase();
+      final year = a.applicationYear.toString().toLowerCase();
+      return id.contains(lower) || year.contains(lower);
+    }).toList();
+
+    return ListView.builder(
+      itemCount: results.length,
+      itemBuilder: (context, index) {
+        final applicant = results[index];
+        return ListTile(
+          title: Row(
+            children: [
+              Text(applicant.applicantID),
+              const SizedBox(width: 4),
+              _genderToIcon(applicant.gender),
+            ],
+          ),
+          subtitle: Text('${applicant.applicationYear}'),
+          onTap: () {
+            Navigator.of(context).pushNamed(
+              '/opensist_applicant',
+              arguments: applicant,
+            );
+          },
+        );
+      },
+    );
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    return buildResults(context);
+  }
+}
+
 Future<String> getCookie() async {
   final prefs = await SharedPreferences.getInstance();
   return prefs.getString('cookie') ?? "";
@@ -55,6 +117,17 @@ class _ApplicantsPageState extends State<ApplicantsPage> {
     final appBar = AppBar(
       backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       title: const Text('Applicants'),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.search),
+          onPressed: () {
+            showSearch<Applicant?>(
+              context: context,
+              delegate: ApplicantSearchDelegate(applicants: _applicants),
+            );
+          },
+        ),
+      ],
     );
 
     final loadingBody = const Center(child: CircularProgressIndicator());

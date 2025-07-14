@@ -5,6 +5,71 @@ import 'package:opensist_alpha/models.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'opensist_api.dart' as api;
 
+class UnivSearchDelegate extends SearchDelegate<void> {
+  final Map<String, List<ProgramData>> programsMap;
+  final Map<String, String> univFullNames;
+
+  UnivSearchDelegate({
+    required this.programsMap,
+    required this.univFullNames,
+  });
+
+  @override
+  List<Widget>? buildActions(BuildContext context) {
+    return [
+      if (query.isNotEmpty)
+        IconButton(
+          icon: const Icon(Icons.clear),
+          onPressed: () => query = '',
+        ),
+    ];
+  }
+
+  @override
+  Widget? buildLeading(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.arrow_back),
+      onPressed: () => close(context, null),
+    );
+  }
+
+  @override
+  Widget buildResults(BuildContext context) {
+    final lower = query.toLowerCase();
+    final filtered = programsMap.entries.where((e) {
+      final abbr = e.key.toLowerCase();
+      final full = (univFullNames[e.key] ?? '').toLowerCase();
+      return abbr.contains(lower) || full.contains(lower);
+    });
+
+    return ListView(
+      children: filtered.map((entry) {
+        return ExpansionTile(
+          title: Text(entry.key),
+          subtitle: Text(univFullNames[entry.key] ?? ''),
+          children: entry.value.map((prog) {
+            return ListTile(
+              title: Text(prog.Program),
+              subtitle: Text(prog.TargetApplicantMajor.join(', ')),
+              onTap: () {
+                Navigator.of(context).pushNamed(
+                  '/opensist_program',
+                  arguments: prog,
+                );
+              },
+            );
+          }).toList(),
+        );
+      }).toList(),
+    );
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    return buildResults(context);
+  }
+}
+
 Future<String> getCookie() async {
   final prefs = await SharedPreferences.getInstance();
   return prefs.getString('cookie') ?? "";
@@ -76,7 +141,24 @@ class _ProgramsPageState extends State<ProgramsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Programs'), backgroundColor: Theme.of(context).colorScheme.inversePrimary,),
+      appBar: AppBar(
+        title: const Text('Programs'),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {
+              showSearch(
+                context: context,
+                delegate: UnivSearchDelegate(
+                  programsMap: _programsMap,
+                  univFullNames: _univFullNames,
+                ),
+              );
+            },
+          ),
+        ],
+      ),
       body: SafeArea(
         child: _loading
             ? const Center(child: CircularProgressIndicator())
