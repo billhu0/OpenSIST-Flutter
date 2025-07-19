@@ -121,6 +121,10 @@ class ProgramData {
   String toString() {
     return toMap().toString();
   }
+
+  String getUniversity() {
+    return ProgramID.split('@')[1];
+  }
 }
 
 class AllPrograms {

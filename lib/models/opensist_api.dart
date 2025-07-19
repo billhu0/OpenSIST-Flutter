@@ -34,6 +34,7 @@ class _CacheEntry {
   _CacheEntry(this.timestamp, this.data);
 }
 
+Map<String, String>? _univFullnames;
 Map<String, int>? _ranks;
 
 Future<Map<String, int>> _loadUniversityRank() async {
@@ -43,6 +44,15 @@ Future<Map<String, int>> _loadUniversityRank() async {
     for (var item in list) item['abbr'] as String: item['cs_rank'] as int,
   };
 }
+
+Future<Map<String, String>> _loadUniversityFullnames() async {
+  final jsonStr = await rootBundle.loadString('assets/json/UnivList.json');
+  final List<dynamic> list = json.decode(jsonStr) as List<dynamic>;
+  return {
+    for (var item in list) item['abbr'] as String: item['fullName'] as String,
+  };
+}
+
 
 /// In-memory cache: URL+body JSON → response data
 final Map<String, _CacheEntry> _cache = {};
@@ -208,4 +218,9 @@ Future<List<RecordData>> fetchGivenRecords(List<String> ids) async {
   return (data as Map<String, dynamic>).values
     .map((e) => RecordData.fromJson(e as Map<String, dynamic>))
     .toList();
+}
+
+Future<String> getUniversityFullName(String abbr) async {
+  _univFullnames ??= await _loadUniversityFullnames();
+  return _univFullnames![abbr]!;
 }

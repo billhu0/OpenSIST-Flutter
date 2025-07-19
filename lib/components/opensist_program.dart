@@ -7,15 +7,26 @@ import 'error_dialog.dart';
 
 Widget _regionEmoji(List<RegionEnum> regs) {
   if (regs.isEmpty) return const SizedBox.shrink();
-  switch (regs.first) {
-    case RegionEnum.US: return const Text('🇺🇸');
-    case RegionEnum.CA: return const Text('🇨🇦');
-    case RegionEnum.EU: return const Text('🇪🇺');
-    case RegionEnum.UK: return const Text('🇬🇧');
-    case RegionEnum.HK: return const Text('🇭🇰');
-    case RegionEnum.SG: return const Text('🇸🇬');
-    default: return const SizedBox.shrink();
+  String text = '';
+  for (final region in regs) {
+    switch (region) {
+      case RegionEnum.US:
+        text += '🇺🇸US  ';
+      case RegionEnum.CA:
+        text += '🇨🇦CA  ';
+      case RegionEnum.EU:
+        text += '🇪🇺EU  ';
+      case RegionEnum.UK:
+        text += '🇬🇧UK  ';
+      case RegionEnum.HK:
+        text += '🇭🇰HK  ';
+      case RegionEnum.SG:
+        text += '🇸🇬SG  ';
+      default:
+        text += region.name;
+    }
   }
+  return Text(text);
 }
 
 class ProgramPage extends StatefulWidget {
@@ -32,6 +43,7 @@ class _ProgramPageState extends State<ProgramPage> {
   ProgramData? _programData;
   String? _programDescriptionMarkdown;
   List<RecordData>? _records;
+  String? _univFullname;
 
   bool _loading = true;
   String? _errorMessage;
@@ -49,6 +61,7 @@ class _ProgramPageState extends State<ProgramPage> {
     if (_programData == null) await _fetchProgram();
     if (_programDescriptionMarkdown == null) await _loadProgramDescription();
     if (_records == null) await _loadRecords();
+    _univFullname ??= await api.getUniversityFullName(_programData!.getUniversity());
     setState(() => _loading = false);
   }
 
@@ -94,7 +107,6 @@ class _ProgramPageState extends State<ProgramPage> {
 
   @override
   Widget build(BuildContext context) {
-    final title = programName;
     if (_loading) {
       return Scaffold(
         appBar: AppBar(
@@ -123,8 +135,8 @@ class _ProgramPageState extends State<ProgramPage> {
           child: Column(
             children: [
               ListTile(
-                title: const Text('Program ID'),
-                subtitle: Text(_programData!.ProgramID),
+                title: const Text('Program and University Name'),
+                subtitle: Text("${_programData!.ProgramID} ($_univFullname)"),
               ),
               ListTile(
                 title: const Text('Target Major(s)'),
