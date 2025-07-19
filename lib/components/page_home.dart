@@ -58,7 +58,7 @@ class _MyHomePageState extends State<MyHomePage> {
             children: [
               const DrawerHeader(
                 child: Text(
-                  'My App Menu',
+                  'OpenSIST ',
                   style: TextStyle(fontSize: 24),
                 ),
               ),
@@ -117,7 +117,7 @@ class _MyHomePageState extends State<MyHomePage> {
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
-          children: <Widget>[
+          children: [
             const Text('Welcome to OpenSIST!'),
           ],
         ),

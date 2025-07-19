@@ -1,15 +1,15 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:opensist_alpha/models.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'opensist_api.dart' as api;
+import 'package:opensist_alpha/models/models.dart';
+import '../models/opensist_api.dart' as api;
+import 'error_dialog.dart';
 
-class UnivSearchDelegate extends SearchDelegate<void> {
+class ProgramSearchDelegate extends SearchDelegate<void> {
   final Map<String, List<ProgramData>> programsMap;
   final Map<String, String> univFullNames;
 
-  UnivSearchDelegate({
+  ProgramSearchDelegate({
     required this.programsMap,
     required this.univFullNames,
   });
@@ -39,7 +39,8 @@ class UnivSearchDelegate extends SearchDelegate<void> {
     final filtered = programsMap.entries.where((e) {
       final abbr = e.key.toLowerCase();
       final full = (univFullNames[e.key] ?? '').toLowerCase();
-      return abbr.contains(lower) || full.contains(lower);
+      final programName = e.value.map((program) => program.Program.toLowerCase());
+      return abbr.contains(lower) || full.contains(lower) || programName.contains(lower) ;
     });
 
     return ListView(
@@ -70,11 +71,6 @@ class UnivSearchDelegate extends SearchDelegate<void> {
   }
 }
 
-Future<String> getCookie() async {
-  final prefs = await SharedPreferences.getInstance();
-  return prefs.getString('cookie') ?? "";
-}
-
 class ProgramsPage extends StatefulWidget {
   const ProgramsPage({super.key});
 
@@ -85,6 +81,7 @@ class ProgramsPage extends StatefulWidget {
 class _ProgramsPageState extends State<ProgramsPage> {
   bool _loading = false;
   String? _errorMessage;
+
   Map<String, List<ProgramData>> _programsMap = {};
   Map<String, String> _univFullNames = {};
 
@@ -101,35 +98,37 @@ class _ProgramsPageState extends State<ProgramsPage> {
     final Map<String, String> names = {
       for (var item in list) item['abbr'] as String: item['fullName'] as String,
     };
-    setState(() {
-      _univFullNames = names;
-    });
+    setState(() { _univFullNames = names; });
   }
 
-  Widget _regionEmoji(List<RegionEnum> regs) {
-    if (regs.isEmpty) return const SizedBox.shrink();
-    switch (regs.first) {
-      case RegionEnum.US:
-        return const Text('🇺🇸');
-      case RegionEnum.CA:
-        return const Text('🇨🇦');
-      case RegionEnum.EU:
-        return const Text('🇪🇺');
-      case RegionEnum.UK:
-        return const Text('🇬🇧');
-      case RegionEnum.HK:
-        return const Text('🇭🇰');
-      case RegionEnum.SG:
-        return const Text('🇸🇬');
-      default:
-        return const SizedBox.shrink();
+  Widget _regionEmoji(List<RegionEnum> regions) {
+    if (regions.isEmpty) return const SizedBox.shrink();
+    String text = "";
+    for (final region in regions) {
+      switch (region) {
+        case RegionEnum.US:
+          text += '🇺🇸';
+        case RegionEnum.CA:
+          text += '🇨🇦';
+        case RegionEnum.EU:
+          text += '🇪🇺';
+        case RegionEnum.UK:
+          text += '🇬🇧';
+        case RegionEnum.HK:
+          text += '🇭🇰';
+        case RegionEnum.SG:
+          text += '🇸🇬';
+        default:
+          break;
+      }
     }
+    return Text(text);
   }
 
   Future<void> _fetchPrograms() async {
     setState(() => _loading = true);
     try {
-      final result = await api.fetchPrograms(await getCookie());
+      final result = await api.fetchPrograms();
       setState(() => _programsMap = result);
     } catch (err) {
       setState(() => _errorMessage = err.toString());
@@ -140,6 +139,15 @@ class _ProgramsPageState extends State<ProgramsPage> {
 
   @override
   Widget build(BuildContext context) {
+
+    if (_errorMessage != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        String tmp = _errorMessage!;
+        setState(() => _errorMessage = null);
+        showErrorDialog(context, tmp, _fetchPrograms);
+      });
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Programs'),
@@ -150,7 +158,7 @@ class _ProgramsPageState extends State<ProgramsPage> {
             onPressed: () {
               showSearch(
                 context: context,
-                delegate: UnivSearchDelegate(
+                delegate: ProgramSearchDelegate(
                   programsMap: _programsMap,
                   univFullNames: _univFullNames,
                 ),
@@ -160,10 +168,7 @@ class _ProgramsPageState extends State<ProgramsPage> {
         ],
       ),
       body: SafeArea(
-        child: _loading
-            ? const Center(child: CircularProgressIndicator())
-            : _errorMessage != null
-            ? Center(child: Text('Error: $_errorMessage'))
+        child: _loading ? const Center(child: CircularProgressIndicator())
             : ListView(
           children: _programsMap.entries.map((entry) {
             final uni = entry.key;

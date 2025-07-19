@@ -271,6 +271,77 @@ class Internship {
   };
 }
 
+class ApplicantContactInfo {
+  final String? homepage;
+  final String? email;
+  final String? linkedin;
+  final String? qq;
+  final String? wechat;
+  final String? otherLink;
+
+  ApplicantContactInfo({
+    this.homepage,
+    this.email,
+    this.linkedin,
+    this.qq,
+    this.wechat,
+    this.otherLink,
+  });
+
+  factory ApplicantContactInfo.fromJson(Map<String, dynamic> json) => ApplicantContactInfo(
+    homepage: json['HomePage'] != null ? json['HomePage'] as String : null,
+    email: json['Email'] != null ? json['Email'] as String : null,
+    linkedin: json['LinkedIn'] != null ? json['LinkedIn'] as String : null,
+    qq: json['QQ'] != null ? json['QQ'] as String : null,
+    wechat: json['WeChat'] != null ? json['WeChat'] as String : null,
+    otherLink: json['OtherLink'] != null ? json['OtherLink'] as String : null,
+  );
+
+  Map<String, dynamic> toJson() => {
+    'HomePage': homepage,
+    'Email': email,
+    'LinkedIn': linkedin,
+    'QQ': qq,
+    'WeChat': wechat,
+    'OtherLink': otherLink,
+  };
+
+  int length() {
+    int len = 0;
+    if (homepage != null) len++;
+    if (email != null) len++;
+    if (linkedin != null) len++;
+    if (qq != null) len++;
+    if (wechat != null) len++;
+    if (otherLink != null) len++;
+    return len;
+  }
+}
+
+class ApplicantMetadata {
+  final List<String> applicantIds; // e.g. ["user@2024", "user@2025"]
+  final String avatar;
+  final ApplicantContactInfo applicantContactInfo;
+
+  ApplicantMetadata({
+    required this.applicantIds,
+    required this.avatar,
+    required this.applicantContactInfo,
+  });
+
+  factory ApplicantMetadata.fromJson(Map<String, dynamic> json) => ApplicantMetadata(
+    applicantIds: (json['ApplicantIDs'] as List<dynamic>).cast<String>(),
+    avatar: json['Avatar'] as String,
+    applicantContactInfo: ApplicantContactInfo.fromJson(json['Contact'] as Map<String, dynamic>)
+  );
+
+  Map<String, dynamic> toJson() => {
+    'ApplicantIDs': applicantIds.toString(),
+    'Avatar': avatar,
+    'Contact': applicantContactInfo.toJson(),
+  };
+}
+
 class Applicant {
   final String applicantID;
   final String gender;

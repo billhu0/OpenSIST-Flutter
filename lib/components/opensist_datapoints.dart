@@ -1,18 +1,7 @@
-// lib/programs_page.dart
-
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:horizontal_data_table/horizontal_data_table.dart';
-
-import 'models.dart';
-import 'opensist_api.dart' as api;
-
-
-Future<String> getCookie() async {
-  final prefs = await SharedPreferences.getInstance();
-  return prefs.getString('cookie') ?? "";
-}
+import 'package:opensist_alpha/components/error_dialog.dart';
+import '../models/models.dart';
+import '../models/opensist_api.dart' as api;
 
 class DatapointsPage extends StatefulWidget {
   const DatapointsPage({super.key});
@@ -37,10 +26,8 @@ class _DatapointsPageState extends State<DatapointsPage> {
     setState(() => _loading = true);
     _records.clear();
     try {
-      final records = await api.fetchDataPoints(await getCookie());
-      setState(() {
-        _records = records;
-      });
+      final records = await api.fetchAllRecords();
+      setState(() { _records = records; });
     } catch (err) {
       setState(() { _errorMessage = err.toString(); });
     } finally {
@@ -57,7 +44,7 @@ class _DatapointsPageState extends State<DatapointsPage> {
   @override
   Widget build(BuildContext context) {
     const double programIdColWidth = 150;
-    const double applicantColWidth = 150;
+    const double applicantColWidth = 180;
     const double statusColWidth = 90;
     const double finalColWidth = 70;
     const double seasonWidth = 100;
@@ -215,8 +202,17 @@ class _DatapointsPageState extends State<DatapointsPage> {
                                 onTap: () {
                                   Navigator.pushNamed(context, '/opensist_program', arguments: record.programID);
                                 },
-                                child: Text(
-                                  record.programID,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).highlightColor,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    record.programID,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(color: Theme.of(context).appBarTheme.foregroundColor),
+                                  ),
                                 ),
                               ),
                             ),
@@ -229,12 +225,17 @@ class _DatapointsPageState extends State<DatapointsPage> {
                                 onTap: () {
                                   Navigator.pushNamed(context, '/opensist_applicant', arguments: record.applicantID);
                                 },
-                                child: Text(
-                                  record.applicantID,
-                                  // style: const TextStyle(
-                                  //   color: Colors.blue,
-                                  //   decoration: TextDecoration.underline,
-                                  // ),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).highlightColor,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    record.applicantID,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(color: Theme.of(context).appBarTheme.foregroundColor),
+                                  ),
                                 ),
                               ),
                             ),
@@ -313,34 +314,9 @@ class _DatapointsPageState extends State<DatapointsPage> {
 
     if (_errorMessage != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        // 弹窗后重置标志，避免重复弹出
         String tmp = _errorMessage!;
         setState(() => _errorMessage = null);
-        showDialog(
-          context: context,
-          builder: (context) {
-            return AlertDialog(
-              title: const Text('Error'),
-              content: Text('Failed to fetch programs. Error: $tmp'),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    _fetchDataPoints();
-                  },
-                  child: const Text('Retry'),
-                ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    Navigator.of(context).pushNamed('/opensist_login');
-                  },
-                  child: const Text('Login'),
-                ),
-              ],
-            );
-          },
-        );
+        showErrorDialog(context, tmp, _fetchDataPoints);
       });
     }
 

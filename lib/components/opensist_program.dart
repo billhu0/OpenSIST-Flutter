@@ -1,14 +1,9 @@
-// lib/opensist_program.dart
 import 'package:flutter/material.dart';
-import 'package:opensist_alpha/models.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'opensist_api.dart' as api;
+import 'package:opensist_alpha/models/models.dart';
 import 'package:markdown_widget/markdown_widget.dart';
+import '../models/opensist_api.dart' as api;
+import 'error_dialog.dart';
 
-Future<String> getCookie() async {
-  final prefs = await SharedPreferences.getInstance();
-  return prefs.getString('cookie') ?? "";
-}
 
 Widget _regionEmoji(List<RegionEnum> regs) {
   if (regs.isEmpty) return const SizedBox.shrink();
@@ -34,52 +29,46 @@ class ProgramPage extends StatefulWidget {
 
 class _ProgramPageState extends State<ProgramPage> {
   late String programName;
-  ProgramData? program;
+  ProgramData? _programData;
+  String? _programDescriptionMarkdown;
+
   bool _loading = true;
   String? _errorMessage;
-  String? _programDescriptionMarkdown;
 
   @override
   void initState() {
     super.initState();
     programName = widget.programName;
-    program = widget.program;
-    if (program == null) {
-      _fetchProgram();
-    } else {
-      _loading = false;
-    }
-    if (_programDescriptionMarkdown == null) {
-      _loadProgramDescription();
-    }
+    _programData = widget.program;
+    _fetchAll();
+  }
+
+  Future<void> _fetchAll() async {
+    setState(() => _loading = true);
+    if (_programData == null) await _fetchProgram();
+    if (_programDescriptionMarkdown == null) await _loadProgramDescription();
+    setState(() => _loading = false);
   }
 
   Future<void> _fetchProgram() async {
-    setState(() => _loading = true);
     try {
-      final all = await api.fetchPrograms(await getCookie());
-      for (var list in all.values) {
+      final allPrograms = await api.fetchPrograms();
+      for (var list in allPrograms.values) {
         for (var p in list) {
           if (p.ProgramID == programName) {
-            program = p;
+            _programData = p;
             break;
           }
         }
-        if (program != null) break;
-      }
-      if (program == null) {
-        throw Exception('Program not found: $programName');
       }
     } catch (err) {
       _errorMessage = err.toString();
-    } finally {
-      setState(() => _loading = false);
     }
   }
 
   Future<void> _loadProgramDescription() async {
     try {
-      final desc = await api.fetchProgramDescription(programName, await getCookie());
+      final desc = await api.fetchProgramDescription(programName);
       setState(() {
         _programDescriptionMarkdown = desc;
       });
@@ -99,12 +88,15 @@ class _ProgramPageState extends State<ProgramPage> {
         body: const Center(child: CircularProgressIndicator()),
       );
     }
+
     if (_errorMessage != null) {
-      return Scaffold(
-        appBar: AppBar(title: Text(title)),
-        body: Center(child: Text('Error: $_errorMessage')),
-      );
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        String tmp = _errorMessage!;
+        setState(() => _errorMessage = null);
+        showErrorDialog(context, tmp, _fetchAll);
+      });
     }
+
     // program 一定非空
     return Scaffold(
       appBar: AppBar(
@@ -117,15 +109,15 @@ class _ProgramPageState extends State<ProgramPage> {
             children: [
               ListTile(
                 title: const Text('Program ID'),
-                subtitle: Text(program!.ProgramID),
+                subtitle: Text(_programData!.ProgramID),
               ),
               ListTile(
                 title: const Text('Target Major(s)'),
-                subtitle: Text(program!.TargetApplicantMajor.join(', ')),
+                subtitle: Text(_programData!.TargetApplicantMajor.join(', ')),
               ),
               ListTile(
                 title: const Text('Region(s)'),
-                subtitle: _regionEmoji(program!.Region),
+                subtitle: _regionEmoji(_programData!.Region),
               ),
               ExpansionTile(
                 initiallyExpanded: true,
@@ -138,8 +130,8 @@ class _ProgramPageState extends State<ProgramPage> {
                 ],
               ),
               ExpansionTile(
-                title: Text('Applicants (${program!.Applicants.length})'),
-                children: program!.Applicants.map((id) =>
+                title: Text('Applicants (${_programData!.Applicants.length})'),
+                children: _programData!.Applicants.map((id) =>
                     ListTile(
                       title: Text(id),
                       onTap: () {
@@ -148,7 +140,6 @@ class _ProgramPageState extends State<ProgramPage> {
                     )
                 ).toList(),
               ),
-
             ],
           ),
         ),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'main.dart'; // so we can access seedColorNotifier & themeModeNotifier
+import '../main.dart'; // so we can access seedColorNotifier & themeModeNotifier
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});

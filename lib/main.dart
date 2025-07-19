@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:opensist_alpha/models.dart';
-import 'package:opensist_alpha/opensist_applicant.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:opensist_alpha/opensist_login.dart';
-import 'package:opensist_alpha/opensist_programs.dart';
-import 'opensist_program.dart';
-import 'package:opensist_alpha/page_home.dart';
-import 'package:opensist_alpha/page_settings.dart';
-
-import 'opensist_applicants.dart';
-import 'opensist_datapoints.dart';
+import 'models/models.dart';
+import 'components/opensist_applicant.dart';
+import 'components/opensist_login.dart';
+import 'components/opensist_programs.dart';
+import 'components/opensist_program.dart';
+import 'components/opensist_applicants.dart';
+import 'components/opensist_datapoints.dart';
+import 'components/page_home.dart';
+import 'components/page_settings.dart';
 
 // Top‐level notifiers that the whole app listens to:
 final seedColorNotifier = ValueNotifier<Color>(Colors.blueAccent);

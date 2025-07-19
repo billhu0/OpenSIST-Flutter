@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:opensist_alpha/models.dart';
+import 'package:opensist_alpha/components/error_dialog.dart';
+import 'package:opensist_alpha/models/models.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'opensist_api.dart' as api;
+import '../models/opensist_api.dart' as api;
 
 
 class ApplicantSearchDelegate extends SearchDelegate<Applicant?> {
@@ -104,7 +105,7 @@ class _ApplicantsPageState extends State<ApplicantsPage> {
     setState(() => _loading = true);
     _applicants.clear();
     try {
-      _applicants = await api.fetchApplicants(await getCookie());
+      _applicants = await api.fetchApplicants();
     } catch (err) {
       setState(() { _errorMessage = err.toString(); });
     } finally {
@@ -155,34 +156,9 @@ class _ApplicantsPageState extends State<ApplicantsPage> {
 
     if (_errorMessage != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        // 弹窗后重置标志，避免重复弹出
         String tmp = _errorMessage!;
         setState(() => _errorMessage = null);
-        showDialog(
-          context: context,
-          builder: (context) {
-            return AlertDialog(
-              title: const Text('Error'),
-              content: Text('Failed to fetch programs. Error: $tmp'),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    _fetchApplicants();
-                  },
-                  child: const Text('Retry'),
-                ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    Navigator.of(context).pushNamed('/opensist_login');
-                  },
-                  child: const Text('Login'),
-                ),
-              ],
-            );
-          },
-        );
+        showErrorDialog(context, tmp, _fetchApplicants);
       });
     }
 
