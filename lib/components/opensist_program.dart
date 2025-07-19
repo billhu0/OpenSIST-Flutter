@@ -97,7 +97,6 @@ class _ProgramPageState extends State<ProgramPage> {
       });
     }
 
-    // program 一定非空
     return Scaffold(
       appBar: AppBar(
         title: Text(programName),
