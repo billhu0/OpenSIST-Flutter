@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/services.dart';
 import 'dart:async';
 import './models.dart';
 
@@ -31,6 +32,16 @@ class _CacheEntry {
   final DateTime timestamp;
   final Map<String, dynamic> data;
   _CacheEntry(this.timestamp, this.data);
+}
+
+Map<String, int>? _ranks;
+
+Future<Map<String, int>> _loadUniversityRank() async {
+  final jsonStr = await rootBundle.loadString('assets/json/UnivList.json');
+  final List<dynamic> list = json.decode(jsonStr) as List<dynamic>;
+  return {
+    for (var item in list) item['abbr'] as String: item['cs_rank'] as int,
+  };
 }
 
 /// In-memory cache: URL+body JSON → response data
@@ -187,6 +198,8 @@ Future<List<RecordData>> fetchAllRecords({int batchSize = 100}) async {
     final slice = ids.sublist(i, (i + batchSize > ids.length) ? ids.length : i + batchSize);
     records.addAll(await fetchRecordsByIds(slice));
   }
+  _ranks ??= await _loadUniversityRank();
+  records.sort((a, b) => _ranks![a.getUniversity()]!.compareTo(_ranks![b.getUniversity()]!));
   return records;
 }
 

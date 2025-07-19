@@ -70,6 +70,10 @@ class RecordData {
     'Status':      status.name,
     'TimeLine':    timeline.toJson(),
   };
+
+  String getUniversity() {
+    return programID.split('@')[1];
+  }
 }
 
 class ProgramData {

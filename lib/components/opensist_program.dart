@@ -145,6 +145,7 @@ class _ProgramPageState extends State<ProgramPage> {
                 ],
               ),
               ExpansionTile(
+                initiallyExpanded: true,
                 title: Text('Applicants (${_programData!.Applicants.length})'),
                 children: [recordTable(context, _records!, showProgramColumn: false)],
               ),

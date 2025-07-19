@@ -28,6 +28,7 @@ Widget recordTable(
     List<RecordData> records, {
       bool showProgramColumn = true,
       bool showApplicantColumn = true,
+      bool shrinkWrap = true,
     }) {
   // Recompute total width based on whether ProgramID is shown
   final double tableWidth =
@@ -151,7 +152,7 @@ Widget recordTable(
 
           // ─── Data Rows ─────────────────────────────────
           ListView.separated(
-            shrinkWrap: true,
+            shrinkWrap: shrinkWrap,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: records.length,
             separatorBuilder: (_, __) => Divider(

@@ -8,10 +8,12 @@ import 'error_dialog.dart';
 class ProgramSearchDelegate extends SearchDelegate<void> {
   final Map<String, List<ProgramData>> programsMap;
   final Map<String, String> univFullNames;
+  final Map<String, int> ranks;
 
   ProgramSearchDelegate({
     required this.programsMap,
     required this.univFullNames,
+    required this.ranks,
   });
 
   @override
@@ -43,26 +45,7 @@ class ProgramSearchDelegate extends SearchDelegate<void> {
       return abbr.contains(lower) || full.contains(lower) || programName.contains(lower) ;
     });
 
-    return ListView(
-      children: filtered.map((entry) {
-        return ExpansionTile(
-          title: Text(entry.key),
-          subtitle: Text(univFullNames[entry.key] ?? ''),
-          children: entry.value.map((prog) {
-            return ListTile(
-              title: Text(prog.Program),
-              subtitle: Text(prog.TargetApplicantMajor.join(', ')),
-              onTap: () {
-                Navigator.of(context).pushNamed(
-                  '/opensist_program',
-                  arguments: prog,
-                );
-              },
-            );
-          }).toList(),
-        );
-      }).toList(),
-    );
+    return buildProgramsList(context, filtered.toList(), univFullNames, ranks);
   }
 
   @override
@@ -84,6 +67,7 @@ class _ProgramsPageState extends State<ProgramsPage> {
 
   Map<String, List<ProgramData>> _programsMap = {};
   Map<String, String> _univFullNames = {};
+  Map<String, int> _univCsRank = {};
 
   @override
   void initState() {
@@ -98,31 +82,13 @@ class _ProgramsPageState extends State<ProgramsPage> {
     final Map<String, String> names = {
       for (var item in list) item['abbr'] as String: item['fullName'] as String,
     };
-    setState(() { _univFullNames = names; });
-  }
-
-  Widget _regionEmoji(List<RegionEnum> regions) {
-    if (regions.isEmpty) return const SizedBox.shrink();
-    String text = "";
-    for (final region in regions) {
-      switch (region) {
-        case RegionEnum.US:
-          text += '🇺🇸';
-        case RegionEnum.CA:
-          text += '🇨🇦';
-        case RegionEnum.EU:
-          text += '🇪🇺';
-        case RegionEnum.UK:
-          text += '🇬🇧';
-        case RegionEnum.HK:
-          text += '🇭🇰';
-        case RegionEnum.SG:
-          text += '🇸🇬';
-        default:
-          break;
-      }
-    }
-    return Text(text);
+    final Map<String, int> csRanks = {
+      for (var item in list) item['abbr'] as String: item['cs_rank'] as int,
+    };
+    setState(() {
+      _univFullNames = names;
+      _univCsRank = csRanks;
+    });
   }
 
   Future<void> _fetchPrograms() async {
@@ -161,6 +127,7 @@ class _ProgramsPageState extends State<ProgramsPage> {
                 delegate: ProgramSearchDelegate(
                   programsMap: _programsMap,
                   univFullNames: _univFullNames,
+                  ranks: _univCsRank,
                 ),
               );
             },
@@ -168,51 +135,81 @@ class _ProgramsPageState extends State<ProgramsPage> {
         ],
       ),
       body: SafeArea(
-        child: _loading ? const Center(child: CircularProgressIndicator())
-            : ListView(
-          children: _programsMap.entries.map((entry) {
-            final uni = entry.key;
-            final list = entry.value;
-            return ExpansionTile(
-              title: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(uni),
-                  Expanded(child: const SizedBox(),),
-                  _regionEmoji(list.first.Region),
-                ],
-              ),
-              subtitle: Text(_univFullNames[uni] ?? 'Full name placeholder'),
-              children: list.map((prog) {
-                return Padding(
-                  padding: EdgeInsets.only(left: 16.0),
-                  child: IntrinsicHeight(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Container(
-                          width: 2,
-                          color: Theme.of(context).dividerColor,
-                        ),
-                        Expanded(
-                          child: ListTile(
-                            contentPadding: EdgeInsets.symmetric(horizontal: 16.0),
-                            title: Text(prog.Program),
-                            subtitle: Text(prog.TargetApplicantMajor.join(', ')),
-                            onTap: () {
-                              Navigator.of(context).pushNamed('/opensist_program', arguments: prog);
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }).toList(),
-            );
-          }).toList(),
-        ),
+        child: _loading
+            ? const Center(child: CircularProgressIndicator())
+            : buildProgramsList(context, _programsMap.entries.toList(), _univFullNames, _univCsRank),
       ),
     );
   }
+}
+
+Widget _regionEmoji(List<RegionEnum> regions) {
+  if (regions.isEmpty) return const SizedBox.shrink();
+  String text = "";
+  for (final region in regions) {
+    switch (region) {
+      case RegionEnum.US: text += '🇺🇸';
+      case RegionEnum.CA: text += '🇨🇦';
+      case RegionEnum.EU: text += '🇪🇺';
+      case RegionEnum.UK: text += '🇬🇧';
+      case RegionEnum.HK: text += '🇭🇰';
+      case RegionEnum.SG: text += '🇸🇬';
+      default: break;
+    }
+  }
+  return Text(text);
+}
+
+Widget buildProgramsList(
+  BuildContext context,
+  List<MapEntry<String, List<ProgramData>>> programsMap,
+  Map<String, String> univFullNames,
+  Map<String, int> univRanking,
+) {
+  // sort by ranking
+  programsMap.sort((a, b) => (univRanking[a.key] ?? 10000).compareTo(univRanking[b.key] ?? 10000));
+
+  return ListView(
+    children: programsMap.map((entry) {
+      final uni = entry.key;
+      final list = entry.value;
+      return ExpansionTile(
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(uni),
+            Expanded(child: const SizedBox(),),
+            _regionEmoji(list.first.Region),
+          ],
+        ),
+        subtitle: Text(univFullNames[uni] ?? 'University Full Name unknown'),
+        children: list.map((prog) {
+          return Padding(
+            padding: EdgeInsets.only(left: 16.0),
+            child: IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Container(
+                    width: 2,
+                    color: Theme.of(context).dividerColor,
+                  ),
+                  Expanded(
+                    child: ListTile(
+                      contentPadding: EdgeInsets.symmetric(horizontal: 16.0),
+                      title: Text(prog.Program),
+                      subtitle: Text(prog.TargetApplicantMajor.join(', ')),
+                      onTap: () {
+                        Navigator.of(context).pushNamed('/opensist_program', arguments: prog);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }).toList(),
+      );
+    }).toList(),
+  );
 }

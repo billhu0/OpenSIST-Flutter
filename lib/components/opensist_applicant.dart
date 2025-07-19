@@ -73,7 +73,6 @@ class _ApplicantPageState extends State<ApplicantPage> {
 
   Future<void> _loadRecords() async {
     try {
-      print(applicant!.programs.entries.map((entry) => "$applicant|${entry.key}").toList());
       final records = await api.fetchRecordsByIds(applicant!.programs.entries.map((entry) => "$applicantId|${entry.key}").toList());
       setState(() { _records = records; });
     } catch (err) {
@@ -246,12 +245,6 @@ class _ApplicantPageState extends State<ApplicantPage> {
             ExpansionTile(
               initiallyExpanded: true,
               title: Text("Application Results (${applicant!.programs.length})"),
-              // children: applicant!.programs.entries.map((entry) =>
-              //   Chip(
-              //     label: Text("${entry.key} - ${entry.value.name}", style: TextStyle(color: Colors.white)),
-              //     backgroundColor: statusColor[entry.value] ?? Colors.grey,
-              //   )
-              // ).toList()
               children: [recordTable(context, _records!, showApplicantColumn: false)],
             ),
           ],

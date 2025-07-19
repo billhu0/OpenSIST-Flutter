@@ -71,7 +71,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               ListTile(
                 leading: const Icon(Icons.login),
-                title: const Text('OpenSIST login'),
+                title: const Text('Login'),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.pushNamed(context, '/opensist_login');
@@ -79,7 +79,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               ListTile(
                 leading: const Icon(Icons.school),
-                title: const Text('OpenSIST programs'),
+                title: const Text('Universities & Programs'),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.pushNamed(context, '/opensist_programs');
@@ -87,7 +87,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               ListTile(
                 leading: const Icon(Icons.notes),
-                title: const Text('OpenSIST datapoints'),
+                title: const Text('Datapoints'),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.pushNamed(context, '/opensist_datapoints');
@@ -95,7 +95,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               ListTile(
                 leading: const Icon(Icons.people),
-                title: const Text('OpenSIST applicants'),
+                title: const Text('Applicants'),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.pushNamed(context, '/opensist_applicants');

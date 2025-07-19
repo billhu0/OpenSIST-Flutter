@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:opensist_alpha/components/error_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/opensist_api.dart' as api;
 
@@ -64,6 +66,7 @@ class _LoginPageState extends State<LoginPage> {
     } catch (err) {
       // _respBodyCtrl.text = 'Error: $err';
       // _respHdrCtrl.text = '';
+      showErrorDialog(context, err.toString(), null);
     } finally {
       setState(() => _loading = false);
     }
@@ -147,10 +150,7 @@ class _LoginPageState extends State<LoginPage> {
               children: [
                 Expanded(flex: 1, child: TextField(
                   controller: _emailCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    // border: OutlineInputBorder(),
-                  ),
+                  decoration: const InputDecoration(labelText: 'Email'),
                   keyboardType: TextInputType.emailAddress,
                   autocorrect: false,
                 ),),

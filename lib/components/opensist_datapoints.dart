@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:opensist_alpha/components/error_dialog.dart';
+import 'package:opensist_alpha/components/record_table.dart';
 import '../models/models.dart';
 import '../models/opensist_api.dart' as api;
 
