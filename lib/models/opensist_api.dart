@@ -49,9 +49,11 @@ Future<Map<String, dynamic>> _post(
 
   // 1) check cache
   final entry = _cache[cacheKey];
-  if (entry != null &&
-      DateTime.now().difference(entry.timestamp) < _cacheTimeout) {
+  if (entry != null && DateTime.now().difference(entry.timestamp) < _cacheTimeout) {
     return entry.data;
+  } else if (entry != null) {
+    // Cache entry is expired, remove it
+    _cache.remove(cacheKey);
   }
 
   // 2) make the HTTP call
@@ -186,4 +188,11 @@ Future<List<RecordData>> fetchAllRecords({int batchSize = 100}) async {
     records.addAll(await fetchRecordsByIds(slice));
   }
   return records;
+}
+
+Future<List<RecordData>> fetchGivenRecords(List<String> ids) async {
+  final data = (await _post('/query/by_records', body: {'IDs': ids}))['data'];
+  return (data as Map<String, dynamic>).values
+    .map((e) => RecordData.fromJson(e as Map<String, dynamic>))
+    .toList();
 }

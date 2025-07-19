@@ -43,8 +43,8 @@ class _DatapointsPageState extends State<DatapointsPage> {
 
   @override
   Widget build(BuildContext context) {
-    const double programIdColWidth = 150;
-    const double applicantColWidth = 180;
+    const double programIdColWidth = 175;
+    const double applicantColWidth = 175;
     const double statusColWidth = 90;
     const double finalColWidth = 70;
     const double seasonWidth = 100;
@@ -86,98 +86,24 @@ class _DatapointsPageState extends State<DatapointsPage> {
                   height: headerHeight,
                   color: Theme.of(context).dividerColor.withOpacity(0.1),
                   child: Row(
-                    children: const [
-                      SizedBox(
-                        width: programIdColWidth,
+                    children:
+                      const ['ProgramID', 'Applicant', 'Status', 'Final', 'Season', 'Decision', 'Interview', 'Application', 'Details'].map((title) => SizedBox(
+                        width: title == 'ProgramID' ? programIdColWidth :
+                               title == 'Applicant' ? applicantColWidth :
+                               title == 'Status' ? statusColWidth :
+                               title == 'Final' ? finalColWidth :
+                               title == 'Season' ? seasonWidth :
+                               title == 'Decision' ? timelineDecisionWidth :
+                               title == 'Interview' ? timelineInterviewWidth :
+                               title == 'Application' ? timelineApplicationWidth : detailWidth,
                         child: Padding(
-                          padding: EdgeInsets.all(8),
+                          padding: const EdgeInsets.all(8),
                           child: Text(
-                            'ProgramID',
+                            title,
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                         ),
-                      ),
-                      SizedBox(
-                        width: applicantColWidth,
-                        child: Padding(
-                          padding: EdgeInsets.all(8),
-                          child: Text(
-                            'Applicant',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ),
-                      SizedBox(
-                        width: statusColWidth,
-                        child: Padding(
-                          padding: EdgeInsets.all(8),
-                          child: Text(
-                            'Status',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ),
-                      SizedBox(
-                        width: finalColWidth,
-                        child: Padding(
-                          padding: EdgeInsets.all(8),
-                          child: Text(
-                            'Final',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ),
-                      SizedBox(
-                        width: seasonWidth,
-                        child: Padding(
-                          padding: EdgeInsets.all(8),
-                          child: Text(
-                            'Season',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ),
-                      SizedBox(
-                        width: timelineDecisionWidth,
-                        child: Padding(
-                          padding: EdgeInsets.all(8),
-                          child: Text(
-                            'Decision',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ),
-                      SizedBox(
-                        width: timelineInterviewWidth,
-                        child: Padding(
-                          padding: EdgeInsets.all(8),
-                          child: Text(
-                            'Interview',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ),
-                      SizedBox(
-                        width: timelineApplicationWidth,
-                        child: Padding(
-                          padding: EdgeInsets.all(8),
-                          child: Text(
-                            'Application',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ),
-                      SizedBox(
-                        width: detailWidth,
-                        child: Padding(
-                          padding: EdgeInsets.all(8),
-                          child: Text(
-                            'Details',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ),
-                    ],
+                      )).toList()
                   ),
                 ),
 

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:opensist_alpha/components/record_table.dart';
 import 'package:opensist_alpha/models/models.dart';
 import 'package:markdown_widget/markdown_widget.dart';
 import '../models/opensist_api.dart' as api;
 import 'error_dialog.dart';
-
 
 Widget _regionEmoji(List<RegionEnum> regs) {
   if (regs.isEmpty) return const SizedBox.shrink();
@@ -31,6 +31,7 @@ class _ProgramPageState extends State<ProgramPage> {
   late String programName;
   ProgramData? _programData;
   String? _programDescriptionMarkdown;
+  List<RecordData>? _records;
 
   bool _loading = true;
   String? _errorMessage;
@@ -47,6 +48,7 @@ class _ProgramPageState extends State<ProgramPage> {
     setState(() => _loading = true);
     if (_programData == null) await _fetchProgram();
     if (_programDescriptionMarkdown == null) await _loadProgramDescription();
+    if (_records == null) await _loadRecords();
     setState(() => _loading = false);
   }
 
@@ -79,12 +81,26 @@ class _ProgramPageState extends State<ProgramPage> {
     }
   }
 
+  Future<void> _loadRecords() async {
+    try {
+      final records = await api.fetchRecordsByIds(_programData!.Applicants.map((e) => '$e|$programName').toList());
+      setState(() { _records = records; });
+    } catch (err) {
+      setState(() {
+        _errorMessage = 'Failed to load records: $err';
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final title = programName;
     if (_loading) {
       return Scaffold(
-        appBar: AppBar(title: Text(title)),
+        appBar: AppBar(
+          title: Text(programName),
+          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        ),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
@@ -130,14 +146,7 @@ class _ProgramPageState extends State<ProgramPage> {
               ),
               ExpansionTile(
                 title: Text('Applicants (${_programData!.Applicants.length})'),
-                children: _programData!.Applicants.map((id) =>
-                    ListTile(
-                      title: Text(id),
-                      onTap: () {
-                        Navigator.of(context).pushNamed('/opensist_applicant', arguments: id);
-                      },
-                    )
-                ).toList(),
+                children: [recordTable(context, _records!, showProgramColumn: false)],
               ),
             ],
           ),
