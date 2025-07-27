@@ -69,14 +69,15 @@ class _MyHomePageState extends State<MyHomePage> {
                   Navigator.pop(context); // close drawer
                 },
               ),
-              ListTile(
-                leading: const Icon(Icons.login),
-                title: const Text('Login'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.pushNamed(context, '/opensist_login');
-                },
-              ),
+              // "Login" page has moved to Settings.
+              // ListTile(
+              //   leading: const Icon(Icons.login),
+              //   title: const Text('Login'),
+              //   onTap: () {
+              //     Navigator.pop(context);
+              //     Navigator.pushNamed(context, '/opensist_login');
+              //   },
+              // ),
               ListTile(
                 leading: const Icon(Icons.school),
                 title: const Text('Universities & Programs'),

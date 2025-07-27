@@ -2,6 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../main.dart'; // so we can access seedColorNotifier & themeModeNotifier
+import '../models/opensist_api.dart' as api;
+
+Future<void> clearCookie() async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setString('cookie', "");
+}
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -85,6 +91,55 @@ class SettingsPage extends StatelessWidget {
       themeModeNotifier.value = mode;
     }
   }
+  
+  void showClearCacheDialog(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Clear Cache?'),
+        content: const Text('This will clear all loaded data and force a fresh fetch on next load.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              api.clearCache();
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Cache cleared')),
+              );
+            },
+            child: const Text('Clear'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void showLogoutDialog(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Logout?'),
+        content: const Text('This will clear your session. You will need to login again to access OpenSIST.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              await clearCookie();
+              Navigator.pop(context);
+            },
+            child: const Text('Logout'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -97,10 +152,10 @@ class SettingsPage extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         children: [
           ListTile(
-            leading: const Icon(Icons.person),
-            title: const Text('Account'),
+            leading: const Icon(Icons.login),
+            title: const Text('Login'),
             onTap: () {
-              // …
+              Navigator.of(context).pushNamed('/opensist_login');
             },
           ),
           const Divider(),
@@ -118,6 +173,23 @@ class SettingsPage extends StatelessWidget {
             leading: const Icon(Icons.brightness_6),
             title: const Text('Dark Mode'),
             onTap: () => _pickThemeMode(context),
+          ),
+          const Divider(),
+
+          ListTile(
+            leading: const Icon(Icons.cached),
+            title: const Text('Clear API Cache'),
+            onTap: () => showClearCacheDialog(context),
+          ),
+          const Divider(),
+
+          ListTile(
+            leading: const Icon(Icons.logout, color: Colors.red),
+            title: const Text(
+              'Logout',
+              style: TextStyle(color: Colors.red),
+            ),
+            onTap: () => showLogoutDialog(context),
           ),
         ],
       ),

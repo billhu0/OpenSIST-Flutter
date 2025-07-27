@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:opensist_alpha/components/error_dialog.dart';
-import 'package:opensist_alpha/components/record_table.dart';
 import '../models/models.dart';
 import '../models/opensist_api.dart' as api;
 
@@ -13,6 +12,10 @@ class DatapointsPage extends StatefulWidget {
 
 class _DatapointsPageState extends State<DatapointsPage> {
   bool _loading = false;
+
+  int _completed = 0;
+  int _total = 1;  // avoid div/0
+
   String? _errorMessage;
   List<RecordData> _records = [];
   final ScrollController _horizontalController = ScrollController();
@@ -24,10 +27,20 @@ class _DatapointsPageState extends State<DatapointsPage> {
   }
 
   Future<void> _fetchDataPoints() async {
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+      _completed = 0;
+    });
     _records.clear();
     try {
-      final records = await api.fetchAllRecords();
+      final records = await api.fetchAllRecords(
+        onProgress: (done, total) {
+          setState(() {
+            _completed = done;
+            _total = total;
+          });
+        }
+      );
       setState(() { _records = records; });
     } catch (err) {
       setState(() { _errorMessage = err.toString(); });
@@ -70,7 +83,20 @@ class _DatapointsPageState extends State<DatapointsPage> {
       title: const Text('DataPoints'),
     );
 
-    final loadingBody = const Center(child: CircularProgressIndicator());
+    final loadingBody = Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const CircularProgressIndicator(),
+          const SizedBox(height: 12),
+          Text(
+            _completed > 0
+                ? '$_completed / $_total application records loaded'
+                : 'Connecting…',
+          ),
+        ],
+      ),
+    );
 
     final body = LayoutBuilder(
       builder: (context, constraints) {

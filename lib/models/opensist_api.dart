@@ -34,6 +34,13 @@ class _CacheEntry {
   _CacheEntry(this.timestamp, this.data);
 }
 
+/// In-memory cache: URL+body JSON → response data
+final Map<String, _CacheEntry> _cache = {};
+
+void clearCache() {
+  _cache.clear();
+}
+
 Map<String, String>? _univFullnames;
 Map<String, int>? _ranks;
 
@@ -52,10 +59,6 @@ Future<Map<String, String>> _loadUniversityFullnames() async {
     for (var item in list) item['abbr'] as String: item['fullName'] as String,
   };
 }
-
-
-/// In-memory cache: URL+body JSON → response data
-final Map<String, _CacheEntry> _cache = {};
 
 /// Low-level POST helper: handles timeouts, headers, JSON-decoding & error checks
 /// Low-level POST helper with caching
@@ -182,7 +185,10 @@ Future<List<RecordData>> fetchRecordsByIds(List<String> ids) async {
 }
 
 /// Convenience method: fetches every record across all programs and applicants in batches
-Future<List<RecordData>> fetchAllRecords({int batchSize = 100}) async {
+Future<List<RecordData>> fetchAllRecords({
+  int batchSize = 50,
+  void Function(int completed, int total)? onProgress,
+}) async {
   final programs = await fetchPrograms();
   // "programs" is of type Map<String, List<Program>>.
   // E.g. "ASU" maps to a LIST of objects. The objects looks like:
@@ -203,13 +209,33 @@ Future<List<RecordData>> fetchAllRecords({int batchSize = 100}) async {
       }
     }
   }
+
+  final int total = ids.length;
+  int processed = 0;
   final List<RecordData> records = [];
   for (var i = 0; i < ids.length; i += batchSize) {
     final slice = ids.sublist(i, (i + batchSize > ids.length) ? ids.length : i + batchSize);
-    records.addAll(await fetchRecordsByIds(slice));
+
+    final newRecords = await fetchRecordsByIds(slice);
+    records.addAll(newRecords);
+    // update progress indicator
+    processed += slice.length;
+    if (onProgress != null) {
+      onProgress(processed, total);
+    }
   }
   _ranks ??= await _loadUniversityRank();
-  records.sort((a, b) => _ranks![a.getUniversity()]!.compareTo(_ranks![b.getUniversity()]!));
+  records.sort((a, b) {
+    // 1) Compare by university rank
+    final rankA = _ranks![a.getUniversity()]!;
+    final rankB = _ranks![b.getUniversity()]!;
+    final rankCompare = rankA.compareTo(rankB);
+    if (rankCompare != 0) {
+      return rankCompare;
+    }
+    // 2) If same rank, fall back to ProgramID lex order
+    return a.programID.compareTo(b.programID);
+  });
   return records;
 }
 

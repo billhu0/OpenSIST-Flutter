@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 
+const COOKIE_INVALID_ERROR_STRING = "Exception: HTTP 401: Unauthorized";
+
 void showErrorDialog(BuildContext context, String errorMessage, Function? retryFunction) {
+  bool isLoginError = errorMessage == COOKIE_INVALID_ERROR_STRING;
+  if (isLoginError) {
+    errorMessage += "\nYou didn't login or your credentials expired. Login to continue";
+  }
   showDialog(
     context: context,
     barrierDismissible: false,
     builder: (context) {
       return AlertDialog(
-        title: const Text('Error'),
+        title: Text(isLoginError ? 'Error: Please Login' : 'Error'),
         content: Text(errorMessage),
         actions: [
           TextButton(
@@ -21,7 +27,15 @@ void showErrorDialog(BuildContext context, String errorMessage, Function? retryF
             },
             child: const Text('Cancel'),
           ),
-          if (retryFunction != null)
+          if (isLoginError)
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).pushNamed('/opensist_login');
+              },
+              child: const Text('Login'),
+            )
+          else if (retryFunction != null)
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
@@ -29,13 +43,6 @@ void showErrorDialog(BuildContext context, String errorMessage, Function? retryF
               },
               child: const Text('Retry'),
             ),
-          // TextButton(
-          //   onPressed: () {
-          //     Navigator.of(context).pop();
-          //     Navigator.of(context).pushNamed('/opensist_login');
-          //   },
-          //   child: const Text('Login'),
-          // ),
         ],
       );
     },

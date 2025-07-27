@@ -1,8 +1,5 @@
 import 'dart:async';
-import 'dart:convert';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:opensist_alpha/components/error_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/opensist_api.dart' as api;
@@ -44,6 +41,35 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> _login() async {
     final email = _emailCtrl.text.trim() + selectedEmailSuffix;
     final pass = _passwordCtrl.text;
+    // 1) show loading
+    if (!mounted) return;
+    setState(() => _loading = true);
+
+    try {
+      // 2) attempt login
+      await api.login(email, pass);
+
+      // 3) guard that widget is still in tree
+      if (!mounted) return;
+
+      // 4) on success, show snackbar
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Login successful')),
+      );
+    } catch (err) {
+      if (!mounted) return;
+      // show your error dialog
+      showErrorDialog(context, err.toString(), null);
+    } finally {
+      if (!mounted) return;
+      // 5) always stop loading spinner
+      setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _loginLegacy() async {
+    final email = _emailCtrl.text.trim() + selectedEmailSuffix;
+    final pass = _passwordCtrl.text;
     setState(() => _loading = true);
 
     try {
@@ -67,8 +93,14 @@ class _LoginPageState extends State<LoginPage> {
       // _respBodyCtrl.text = 'Error: $err';
       // _respHdrCtrl.text = '';
       showErrorDialog(context, err.toString(), null);
-    } finally {
       setState(() => _loading = false);
+      return;
+    } finally {
+      // If we are successfully login
+      setState(() => _loading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Login successful')),
+      );
     }
   }
 
@@ -199,13 +231,13 @@ class _LoginPageState extends State<LoginPage> {
             ),
 
             // Clear Cookie button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _loading ? null : clearCookie,
-                child: const Text('Logout (Clear Cookie)'),
-              ),
-            ),
+            // SizedBox(
+            //   width: double.infinity,
+            //   child: ElevatedButton(
+            //     onPressed: _loading ? null : clearCookie,
+            //     child: const Text('Logout (Clear Cookie)'),
+            //   ),
+            // ),
 
             const SizedBox(height: 12),
             // const Text('Everything below is only for testing.'),
