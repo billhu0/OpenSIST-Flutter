@@ -1,9 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:opensist_alpha/components/error_dialog.dart';
+import 'package:opensist_alpha/components/opensist_applicants.dart';
 import 'package:opensist_alpha/components/record_table.dart';
 import 'package:opensist_alpha/models/models.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/opensist_api.dart' as api;
+
+// Build a "click-to-copy" ListTile Tile.
+Widget _buildCopyableTile(BuildContext context, {required String title, required String value}) {
+  return ListTile(
+    title: Text(title),
+    subtitle: Text(value),
+    // Add a trailing icon to indicate the tile is interactive
+    trailing: Icon(Icons.copy_rounded, size: 18, color: Colors.grey.shade500),
+    onTap: () {
+      // Use the Clipboard API to set the data
+      Clipboard.setData(ClipboardData(text: value));
+
+      // Show a confirmation SnackBar to the user
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('$title ($value) copied to clipboard!'),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    },
+    // Add a little visual feedback on tap
+    splashColor: Colors.blue.withOpacity(0.1),
+  );
+}
 
 Future<String> getCookie() async {
   final prefs = await SharedPreferences.getInstance();
@@ -105,16 +132,27 @@ class _ApplicantPageState extends State<ApplicantPage> {
         child: Column(
           children: [
             ListTile(
-              title: Text("Applicant ID"),
-              subtitle: Text(applicant!.applicantID),
-            ),
-            ListTile(
-              title: Text("Gender"),
-              subtitle: Text(applicant!.gender),
-            ),
-            ListTile(
-              title: Text("Degree"),
-              subtitle: Text(applicant!.currentDegree),
+              title: Text("Applicant Basic Info"),
+              subtitle: Wrap(
+                spacing: 8.0, // Horizontal gap between items
+                // runSpacing: 4.0, // Vertical gap between lines
+                crossAxisAlignment: WrapCrossAlignment.center, // To align items vertically
+                children: [
+                  Text(applicant!.applicantID),
+                  Chip(
+                    avatar: CircleAvatar(
+                      child: genderToIcon(applicant!.gender),
+                    ),
+                    label: Text(genderToText(applicant!.gender)),
+                  ),
+                  Chip(
+                    avatar: CircleAvatar(
+                      child: Icon(Icons.school),
+                    ),
+                    label: Text(applicant!.currentDegree),
+                  ),
+                ],
+              )
             ),
             ListTile(
               title: Text("Application Year"),
@@ -149,34 +187,40 @@ class _ApplicantPageState extends State<ApplicantPage> {
               title: Text("Contact Info (${applicantMetadata!.applicantContactInfo.length()})"),
               children: [
                 if (applicantMetadata!.applicantContactInfo.homepage != null)
-                  ListTile(
-                    title: const Text("HomePage"),
-                    subtitle: Text(applicantMetadata!.applicantContactInfo.homepage!),
+                  _buildCopyableTile(
+                    context,
+                    title: "HomePage",
+                    value: applicantMetadata!.applicantContactInfo.homepage!,
                   ),
                 if (applicantMetadata!.applicantContactInfo.linkedin != null)
-                  ListTile(
-                    title: const Text("LinkedIn"),
-                    subtitle: Text(applicantMetadata!.applicantContactInfo.linkedin!),
+                  _buildCopyableTile(
+                    context,
+                    title: "LinkedIn",
+                    value: applicantMetadata!.applicantContactInfo.linkedin!,
                   ),
                 if (applicantMetadata!.applicantContactInfo.email != null)
-                  ListTile(
-                    title: const Text("Email"),
-                    subtitle: Text(applicantMetadata!.applicantContactInfo.email!),
+                  _buildCopyableTile(
+                    context,
+                    title: "Email",
+                    value: applicantMetadata!.applicantContactInfo.email!,
                   ),
                 if (applicantMetadata!.applicantContactInfo.wechat != null)
-                  ListTile(
-                    title: const Text("WeChat"),
-                    subtitle: Text(applicantMetadata!.applicantContactInfo.wechat!),
+                  _buildCopyableTile(
+                    context,
+                    title: "WeChat",
+                    value: applicantMetadata!.applicantContactInfo.wechat!,
                   ),
                 if (applicantMetadata!.applicantContactInfo.qq != null)
-                  ListTile(
-                    title: const Text("QQ"),
-                    subtitle: Text(applicantMetadata!.applicantContactInfo.qq!),
+                  _buildCopyableTile(
+                    context,
+                    title: "QQ",
+                    value: applicantMetadata!.applicantContactInfo.qq!,
                   ),
                 if (applicantMetadata!.applicantContactInfo.otherLink != null)
-                  ListTile(
-                    title: const Text("Other Link"),
-                    subtitle: Text(applicantMetadata!.applicantContactInfo.otherLink!),
+                  _buildCopyableTile(
+                    context,
+                    title: "Other Link",
+                    value: applicantMetadata!.applicantContactInfo.otherLink!,
                   ),
               ],
             ),

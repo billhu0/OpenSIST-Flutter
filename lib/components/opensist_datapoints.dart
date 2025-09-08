@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:opensist_alpha/components/error_dialog.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/models.dart';
 import '../models/opensist_api.dart' as api;
 
@@ -13,6 +14,9 @@ class DatapointsPage extends StatefulWidget {
 class _DatapointsPageState extends State<DatapointsPage> {
   bool _loading = false;
 
+  // 1. Add a state variable for the setting
+  bool _showTimelineDates = true; // Default to true
+
   int _completed = 0;
   int _total = 1;  // avoid div/0
 
@@ -23,6 +27,16 @@ class _DatapointsPageState extends State<DatapointsPage> {
   @override
   void initState() {
     super.initState();
+    _loadSettings();
+    _fetchDataPoints();
+  }
+
+  Future<void> _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    // Read the setting, defaulting to true if not found
+    _showTimelineDates = prefs.getBool('showTimelineDates') ?? true;
+    
+    // Now fetch the data points
     _fetchDataPoints();
   }
 
@@ -66,10 +80,13 @@ class _DatapointsPageState extends State<DatapointsPage> {
     const double timelineInterviewWidth = 120;
     const double timelineApplicationWidth = 120;
     const double detailWidth = 300;
-    final double totalWidth = (
-      programIdColWidth + applicantColWidth + statusColWidth + finalColWidth + seasonWidth +
-        timelineDecisionWidth + timelineInterviewWidth + timelineApplicationWidth + detailWidth
+    double totalWidth = (
+      programIdColWidth + applicantColWidth + statusColWidth + finalColWidth + seasonWidth + detailWidth
     );
+    if (_showTimelineDates) {
+      totalWidth +=
+        timelineDecisionWidth + timelineInterviewWidth + timelineApplicationWidth;
+    }
 
     final statusColor = {
       Status.Admit: Colors.green,
@@ -98,6 +115,10 @@ class _DatapointsPageState extends State<DatapointsPage> {
       ),
     );
 
+    final columns = _showTimelineDates ? 
+      ['ProgramID', 'Applicant', 'Status', 'Final', 'Season', 'Decision', 'Interview', 'Application', 'Details'] :
+      ['ProgramID', 'Applicant', 'Status', 'Final', 'Season', 'Details'];
+
     final body = LayoutBuilder(
       builder: (context, constraints) {
         // estimate your header height (or measure it)
@@ -114,7 +135,7 @@ class _DatapointsPageState extends State<DatapointsPage> {
                   color: Theme.of(context).dividerColor.withOpacity(0.1),
                   child: Row(
                     children:
-                      const ['ProgramID', 'Applicant', 'Status', 'Final', 'Season', 'Decision', 'Interview', 'Application', 'Details'].map((title) => SizedBox(
+                      columns.map((title) => SizedBox(
                         width: title == 'ProgramID' ? programIdColWidth :
                                title == 'Applicant' ? applicantColWidth :
                                title == 'Status' ? statusColWidth :
@@ -215,7 +236,7 @@ class _DatapointsPageState extends State<DatapointsPage> {
                             width: finalColWidth,
                             child: Padding(
                               padding: const EdgeInsets.all(8),
-                              child: Text(record.finalDecision ? 'Yes' : 'No'),
+                              child: Text(record.finalDecision ? 'Yes' : ''),
                             ),
                           ),
                           SizedBox(
@@ -225,27 +246,29 @@ class _DatapointsPageState extends State<DatapointsPage> {
                               child: Text('${record.semester.name} ${record.programYear}'),
                             ),
                           ),
-                          SizedBox(
-                            width: timelineDecisionWidth,
-                            child: Padding(
-                              padding: const EdgeInsets.all(8),
-                              child: Text(record.timeline.decision ?? ''),
+                          if (_showTimelineDates) ...[
+                            SizedBox(
+                              width: timelineDecisionWidth,
+                              child: Padding(
+                                padding: const EdgeInsets.all(8),
+                                child: Text(record.timeline.decision ?? ''),
+                              ),
                             ),
-                          ),
-                          SizedBox(
-                            width: timelineInterviewWidth,
-                            child: Padding(
-                              padding: const EdgeInsets.all(8),
-                              child: Text(record.timeline.interview ?? ''),
+                            SizedBox(
+                              width: timelineInterviewWidth,
+                              child: Padding(
+                                padding: const EdgeInsets.all(8),
+                                child: Text(record.timeline.interview ?? ''),
+                              ),
                             ),
-                          ),
-                          SizedBox(
-                            width: timelineApplicationWidth,
-                            child: Padding(
-                              padding: const EdgeInsets.all(8),
-                              child: Text(record.timeline.submit ?? ''),
+                            SizedBox(
+                              width: timelineApplicationWidth,
+                              child: Padding(
+                                padding: const EdgeInsets.all(8),
+                                child: Text(record.timeline.submit ?? ''),
+                              ),
                             ),
-                          ),
+                          ],
                           SizedBox(
                             width: detailWidth,
                             child: Padding(

@@ -9,8 +9,33 @@ Future<void> clearCookie() async {
   await prefs.setString('cookie', "");
 }
 
-class SettingsPage extends StatelessWidget {
+class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
+
+  @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  bool _showTimelineDates = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadShowTimelineDates();
+  }
+
+  Future<void> _loadShowTimelineDates() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _showTimelineDates = prefs.getBool('showTimelineDates') ?? true;
+    });
+  }
+
+  Future<void> _saveShowTimelineDates(bool newValue) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('showTimelineDates', newValue);
+  }
 
   // 1. Define your options in one place:
   static const colorOptions = <String, Color>{
@@ -141,6 +166,7 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -180,6 +206,22 @@ class SettingsPage extends StatelessWidget {
             leading: const Icon(Icons.cached),
             title: const Text('Clear API Cache'),
             onTap: () => showClearCacheDialog(context),
+          ),
+          const Divider(),
+
+          // Show dates or not (申请时间，面试时间，结果通知时间)
+          ListTile(
+            leading: const Icon(Icons.calendar_month),
+            title: const Text('Show Timeline Dates'),
+            trailing: Switch(
+              value: _showTimelineDates,
+              onChanged: (newValue) {
+                setState(() {
+                  _showTimelineDates = newValue;
+                });
+                _saveShowTimelineDates(newValue);
+              },
+            ),
           ),
           const Divider(),
 

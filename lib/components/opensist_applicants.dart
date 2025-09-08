@@ -46,7 +46,7 @@ class ApplicantSearchDelegate extends SearchDelegate<Applicant?> {
             children: [
               Text(applicant.applicantID),
               const SizedBox(width: 4),
-              _genderToIcon(applicant.gender),
+              genderToIcon(applicant.gender),
             ],
           ),
           subtitle: Text('${applicant.applicationYear}'),
@@ -79,14 +79,29 @@ class ApplicantsPage extends StatefulWidget {
   State<ApplicantsPage> createState() => _ApplicantsPageState();
 }
 
-Icon _genderToIcon(String gender) {
+Icon genderToIcon(String gender) {
   switch (gender) {
     case "Male":
       return const Icon(Icons.male, size: 18, color: Colors.blue,);
     case "Female":
       return const Icon(Icons.female, size: 18, color: Colors.pink,);
-    default:
+    case "Others":
       return const Icon(Icons.transgender, size: 18);
+    default:
+      return const Icon(Icons.question_mark, size: 18);
+  }
+}
+
+String genderToText(String gender) {
+  switch (gender) {
+    case "Male":
+      return "Male";
+    case "Female":
+      return "Female";
+    case "Others":
+      return "Non-binary";
+    default:
+      return "Gender unknown";
   }
 }
 
@@ -142,7 +157,7 @@ class _ApplicantsPageState extends State<ApplicantsPage> {
             children: [
               Text(applicant.applicantID),
               const SizedBox(width: 4),
-              _genderToIcon(applicant.gender),
+              genderToIcon(applicant.gender),
             ],
           ),
           subtitle: Text('${applicant.applicationYear}'),

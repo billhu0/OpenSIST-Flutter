@@ -259,7 +259,7 @@ Widget recordTable(
                     width: finalColWidth,
                     child: Padding(
                       padding: const EdgeInsets.all(8),
-                      child: Text(record.finalDecision ? 'Yes' : 'No'),
+                      child: Text(record.finalDecision ? 'Yes' : ''),
                     ),
                   ),
 
