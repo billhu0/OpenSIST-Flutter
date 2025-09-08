@@ -4,6 +4,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/models.dart';
 import '../models/opensist_api.dart' as api;
 
+
+final statusColor = {
+  Status.Admit: Colors.green,
+  Status.Reject: Colors.red,
+  Status.Defer: Colors.orange,
+  Status.Waitlist: Colors.grey,
+};
 class DatapointsPage extends StatefulWidget {
   const DatapointsPage({super.key});
 
@@ -22,11 +29,24 @@ class _DatapointsPageState extends State<DatapointsPage> {
 
   String? _errorMessage;
   List<RecordData> _records = [];
+  List<RecordData> _filteredRecords = [];
+  // 1. Add controllers and state variables for filters
+  final _programIdFilterController = TextEditingController();
+  final _applicantFilterController = TextEditingController();
+  final _seasonFilterController = TextEditingController();
+  String _statusFilter = 'All';
+  String _finalFilter = 'All';
+
   final ScrollController _horizontalController = ScrollController();
 
   @override
   void initState() {
     super.initState();
+    // Add listeners to text controllers to apply filters on change
+    _programIdFilterController.addListener(_applyFilters);
+    _applicantFilterController.addListener(_applyFilters);
+    _seasonFilterController.addListener(_applyFilters);
+
     _loadSettings();
     _fetchDataPoints();
   }
@@ -55,7 +75,7 @@ class _DatapointsPageState extends State<DatapointsPage> {
           });
         }
       );
-      setState(() { _records = records; });
+      setState(() { _records = records; _filteredRecords = _records; });
     } catch (err) {
       setState(() { _errorMessage = err.toString(); });
     } finally {
@@ -63,17 +83,223 @@ class _DatapointsPageState extends State<DatapointsPage> {
     }
   }
 
+  // 2. Create the filtering logic
+  void _applyFilters() {
+    List<RecordData> tempRecords = List.from(_records);
+
+    final programIdQuery = _programIdFilterController.text.toLowerCase().trim();
+    if (programIdQuery.isNotEmpty) {
+      tempRecords = tempRecords.where((r) => r.programID.toLowerCase().contains(programIdQuery)).toList();
+    }
+
+    final applicantQuery = _applicantFilterController.text.toLowerCase().trim();
+    if (applicantQuery.isNotEmpty) {
+      tempRecords = tempRecords.where((r) => r.applicantID.toLowerCase().contains(applicantQuery)).toList();
+    }
+
+    final seasonQuery = _seasonFilterController.text.toLowerCase().trim();
+    if (seasonQuery.isNotEmpty) {
+      tempRecords = tempRecords.where((r) {
+        final seasonString = '${r.semester.name} ${r.programYear}${r.semester.name}'.toLowerCase();
+        return seasonString.contains(seasonQuery);
+      }).toList();
+    }
+    
+    if (_statusFilter != 'All') {
+      tempRecords = tempRecords.where((r) => r.status.name == _statusFilter).toList();
+    }
+
+    if (_finalFilter != 'All') {
+      final finalBool = _finalFilter == 'Yes';
+      tempRecords = tempRecords.where((r) => r.finalDecision == finalBool).toList();
+    }
+
+    setState(() {
+      _filteredRecords = tempRecords;
+    });
+  }
+
+  void _clearFilters() {
+    // Clear the text controllers. This will trigger their listeners.
+    _programIdFilterController.clear();
+    _applicantFilterController.clear();
+    _seasonFilterController.clear();
+
+    // Reset the dropdown state variables
+    setState(() {
+      _statusFilter = 'All';
+      _finalFilter = 'All';
+    });
+
+    // Re-apply filters to update the list with the cleared state
+    _applyFilters();
+  }
+
+  bool get _isFilterActive {
+    return _programIdFilterController.text.isNotEmpty ||
+        _applicantFilterController.text.isNotEmpty ||
+        _seasonFilterController.text.isNotEmpty ||
+        _statusFilter != 'All' ||
+        _finalFilter != 'All';
+  }
+
   @override
   void dispose() {
     _horizontalController.dispose();
+
+    // Important: dispose controllers and remove listeners
+    _programIdFilterController.removeListener(_applyFilters);
+    _applicantFilterController.removeListener(_applyFilters);
+    _seasonFilterController.removeListener(_applyFilters);
+    _programIdFilterController.dispose();
+    _applicantFilterController.dispose();
+    _seasonFilterController.dispose();
+
     super.dispose();
+  }
+
+  static const filterBarHeight = 50.0;
+
+  // 3. Create a widget for the filter bar
+  Widget _buildFilterBar(Map<String, double> colWidths) {
+    return Container(
+      height: filterBarHeight,
+      color: Theme.of(context).dividerColor.withOpacity(0.1),
+      child: Row(
+        children: [
+          // ProgramID Filter
+          SizedBox(
+            width: colWidths['ProgramID'],
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(8.0, 16.0, 8.0, 0.0),
+              child: TextField(
+                controller: _programIdFilterController,
+                decoration: const InputDecoration(isDense: true, hintText: 'Filter...'),
+                autocorrect: false,
+                enableSuggestions: false,
+              ),
+            ),
+          ),
+          // Applicant Filter
+          SizedBox(
+            width: colWidths['Applicant'],
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(8.0, 16.0, 8.0, 0.0),
+              child: TextField(
+                controller: _applicantFilterController,
+                decoration: const InputDecoration(isDense: true, hintText: 'Filter...'),
+                autocorrect: false,
+                enableSuggestions: false,
+              ),
+            ),
+          ),
+          // Status Filter
+          SizedBox(
+            width: colWidths['Status'],
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 5.0),
+              child: DropdownButtonFormField<String>(
+                isDense: true,
+                value: _statusFilter,
+                items: ['All', 'Admit', 'Reject', 'Waitlist', 'Defer']
+                  .map((val) => DropdownMenuItem(
+                    value: val, 
+                    child: Container(
+                      padding: val != "All" ? const EdgeInsets.symmetric(vertical: 4, horizontal: 8) : null,
+                      decoration: val != "All" ? BoxDecoration(
+                        color: statusColor[Status.values.byName(val)] ?? Colors.grey ,
+                        borderRadius: BorderRadius.circular(12),
+                      ) : null,
+                      child: Text(
+                        val,
+                        style: val != "All" ? const TextStyle(color: Colors.white, fontSize: 12) : null,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),)
+                  )
+                  .toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() { _statusFilter = value; });
+                    _applyFilters(); // Re-apply filters on change
+                  }
+                },
+              ),
+            ),
+          ),
+          // Final Filter
+          SizedBox(
+            width: colWidths['Final'],
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+              child: DropdownButtonFormField<String>(
+                isDense: true,
+                value: _finalFilter,
+                items: ['All', 'Yes', 'No']
+                  .map((val) => DropdownMenuItem(value: val, child: Text(val)))
+                  .toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() { _finalFilter = value; });
+                    _applyFilters();
+                  }
+                },
+              ),
+            ),
+          ),
+          // Season Filter
+          SizedBox(
+            width: colWidths['Season'],
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(8.0, 16.0, 8.0, 0.0),
+              child: TextField(
+                controller: _seasonFilterController,
+                decoration: const InputDecoration(isDense: true, hintText: 'Filter...'),
+                autocorrect: false,
+                enableSuggestions: false,
+              ),
+            ),
+          ),
+
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: AnimatedOpacity(
+              // Use the helper to show/hide the button
+              opacity: _isFilterActive ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 200),
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.clear, size: 18),
+                label: const Text('Clear All Filters'),
+                onPressed: _isFilterActive ? _clearFilters : null, // Disable if no filters
+                style: TextButton.styleFrom(
+                  foregroundColor: Theme.of(context).colorScheme.error,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+
+    final colWidths = {
+      'ProgramID': 175.0,
+      'Applicant': 175.0,
+      'Status': 100.0,
+      'Final': 70.0,
+      'Season': 100.0,
+      'Decision': 120.0,
+      'Interview': 120.0,
+      'Application': 120.0,
+      'Details': 300.0,
+    };
+
     const double programIdColWidth = 175;
     const double applicantColWidth = 175;
-    const double statusColWidth = 90;
+    const double statusColWidth = 100;
     const double finalColWidth = 70;
     const double seasonWidth = 100;
     const double timelineDecisionWidth = 120;
@@ -88,16 +314,14 @@ class _DatapointsPageState extends State<DatapointsPage> {
         timelineDecisionWidth + timelineInterviewWidth + timelineApplicationWidth;
     }
 
-    final statusColor = {
-      Status.Admit: Colors.green,
-      Status.Reject: Colors.red,
-      Status.Defer: Colors.orange,
-      Status.Waitlist: Colors.grey,
-    };
+    // Show current filteredRecords / Records count in the title bar
+    String countsToDisplay = _loading ? "" : (
+      _filteredRecords.length == _records.length ? '(${_records.length})' : '(${_filteredRecords.length}/${_records.length})'
+    );
 
     final appBar = AppBar(
       backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-      title: const Text('DataPoints'),
+      title: Text('DataPoints $countsToDisplay'),
     );
 
     final loadingBody = Center(
@@ -155,17 +379,19 @@ class _DatapointsPageState extends State<DatapointsPage> {
                   ),
                 ),
 
+                _buildFilterBar(colWidths),
+
                 // ─── Scrollable Body ──────────────────────────
                 SizedBox(
-                  height: constraints.maxHeight - headerHeight,
+                  height: constraints.maxHeight - headerHeight - filterBarHeight,
                   child: ListView.separated(
-                    itemCount: _records.length,
+                    itemCount: _filteredRecords.length,
                     separatorBuilder: (_, __) => Divider(
                       height: 1,
                       color: Theme.of(context).dividerColor,
                     ),
                     itemBuilder: (context, index) {
-                      final record = _records[index];
+                      final record = _filteredRecords[index];
                       return Row(
                         children: [
                           SizedBox(
