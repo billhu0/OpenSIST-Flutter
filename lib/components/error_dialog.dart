@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:opensist_alpha/components/opensist_login.dart';
 
 const COOKIE_INVALID_ERROR_STRING = "Exception: HTTP 401: Unauthorized";
 
@@ -6,6 +7,12 @@ void showErrorDialog(BuildContext context, String errorMessage, Function? retryF
   bool isLoginError = errorMessage == COOKIE_INVALID_ERROR_STRING;
   if (isLoginError) {
     errorMessage += "\nYou didn't login or your credentials expired. Login to continue";
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) => LoginPage()),
+      (Route<dynamic> route) => false,
+    );
+    return;
   }
   showDialog(
     context: context,

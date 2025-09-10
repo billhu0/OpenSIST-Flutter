@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../main.dart'; // so we can access seedColorNotifier & themeModeNotifier
 import '../models/opensist_api.dart' as api;
+import 'opensist_login.dart';
 
 Future<void> clearCookie() async {
   final prefs = await SharedPreferences.getInstance();
@@ -158,6 +159,10 @@ class _SettingsPageState extends State<SettingsPage> {
             onPressed: () async {
               await clearCookie();
               Navigator.pop(context);
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (context) => LoginPage()),
+                    (Route<dynamic> route) => false,
+              );
             },
             child: const Text('Logout'),
           ),
@@ -178,14 +183,14 @@ class _SettingsPageState extends State<SettingsPage> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          ListTile(
-            leading: const Icon(Icons.login),
-            title: const Text('Login'),
-            onTap: () {
-              Navigator.of(context).pushNamed('/opensist_login');
-            },
-          ),
-          const Divider(),
+          // ListTile(
+          //   leading: const Icon(Icons.login),
+          //   title: const Text('Login'),
+          //   onTap: () {
+          //     Navigator.of(context).pushNamed('/opensist_login');
+          //   },
+          // ),
+          // const Divider(),
 
           // THEME COLOR ITEM
           ListTile(
@@ -227,17 +232,6 @@ class _SettingsPageState extends State<SettingsPage> {
           const Divider(),
 
           ListTile(
-            leading: const Icon(Icons.logout, color: Colors.red),
-            title: const Text(
-              'Logout',
-              style: TextStyle(color: Colors.red),
-            ),
-            onTap: () => showLogoutDialog(context),
-          ),
-
-          const Divider(),
-
-          ListTile(
             leading: const Icon(Icons.more_horiz_sharp),
             title: const Text(
               'About',
@@ -248,7 +242,18 @@ class _SettingsPageState extends State<SettingsPage> {
               applicationVersion: 'v1.0.0',
               children: [ const Text('OpenSIST Flutter App Prototype, created by Bill Hu <opensist@billhu.us>') ],
             ),
-          )
+          ),
+
+          const Divider(),
+
+          ListTile(
+            leading: const Icon(Icons.logout, color: Colors.red),
+            title: const Text(
+              'Logout',
+              style: TextStyle(color: Colors.red),
+            ),
+            onTap: () => showLogoutDialog(context),
+          ),
         ],
       ),
     );

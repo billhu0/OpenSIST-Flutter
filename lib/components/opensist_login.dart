@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:opensist_alpha/components/error_dialog.dart';
+import 'package:opensist_alpha/components/page_home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/opensist_api.dart' as api;
 
@@ -61,6 +62,10 @@ class _LoginPageState extends State<LoginPage> {
       // Clear the text fields after a successful login
       _emailCtrl.clear();
       _passwordCtrl.clear();
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => MyHomePage(title: 'OpenSIST')),
+            (Route<dynamic> route) => false,
+      );
     } catch (err) {
       if (!mounted) return;
       // show your error dialog
@@ -176,7 +181,10 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
+      appBar: AppBar(
+        title: const Text('OpenSIST Login'),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+      ),
       body: AutofillGroup(
         child: Padding(
           padding: const EdgeInsets.all(16),
