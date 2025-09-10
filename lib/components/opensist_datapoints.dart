@@ -19,7 +19,7 @@ class DatapointsPage extends StatefulWidget {
 }
 
 class _DatapointsPageState extends State<DatapointsPage> {
-  bool _loading = false;
+  bool _loading = true;
 
   // 1. Add a state variable for the setting
   bool _showTimelineDates = true; // Default to true
@@ -260,23 +260,6 @@ class _DatapointsPageState extends State<DatapointsPage> {
               ),
             ),
           ),
-
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: AnimatedOpacity(
-              // Use the helper to show/hide the button
-              opacity: _isFilterActive ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 200),
-              child: ElevatedButton.icon(
-                icon: const Icon(Icons.clear, size: 18),
-                label: const Text('Clear All Filters'),
-                onPressed: _isFilterActive ? _clearFilters : null, // Disable if no filters
-                style: TextButton.styleFrom(
-                  foregroundColor: Theme.of(context).colorScheme.error,
-                ),
-              ),
-            ),
-          ),
         ],
       ),
     );
@@ -322,6 +305,25 @@ class _DatapointsPageState extends State<DatapointsPage> {
     final appBar = AppBar(
       backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       title: Text('DataPoints $countsToDisplay'),
+      actions: [
+        IconButton(
+          onPressed: _isFilterActive ? _clearFilters : null, 
+          icon: const Icon(Icons.filter_alt_off),
+          tooltip: "Remove all filters",
+        ),
+        IconButton(
+          icon: const Icon(Icons.refresh),
+          onPressed: () {
+            setState(() {
+              _loading = true;
+            });
+            api.clearCache();
+            _loadSettings();
+            _fetchDataPoints();
+          },
+          tooltip: "Refresh",
+        ),
+      ],
     );
 
     final loadingBody = Center(

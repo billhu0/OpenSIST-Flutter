@@ -173,6 +173,7 @@ class _SettingsPageState extends State<SettingsPage> {
       appBar: AppBar(
         title: const Text('Settings'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        centerTitle: false,
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -233,6 +234,21 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
             onTap: () => showLogoutDialog(context),
           ),
+
+          const Divider(),
+
+          ListTile(
+            leading: const Icon(Icons.more_horiz_sharp),
+            title: const Text(
+              'About',
+            ),
+            onTap: () => showAboutDialog(
+              context: context,
+              applicationName: 'OpenSIST',
+              applicationVersion: 'v1.0.0',
+              children: [ const Text('OpenSIST Flutter App Prototype, created by Bill Hu <opensist@billhu.us>') ],
+            ),
+          )
         ],
       ),
     );

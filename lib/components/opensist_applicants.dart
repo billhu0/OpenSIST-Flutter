@@ -106,7 +106,7 @@ String genderToText(String gender) {
 }
 
 class _ApplicantsPageState extends State<ApplicantsPage> {
-  bool _loading = false;
+  bool _loading = true;
   String? _errorMessage;
   List<Applicant> _applicants = [];
 
@@ -143,6 +143,16 @@ class _ApplicantsPageState extends State<ApplicantsPage> {
             );
           },
         ),
+        IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () {
+              setState(() {
+                _loading = true;
+              });
+              api.clearCache();
+              _fetchApplicants();
+            },
+          ),
       ],
     );
 

@@ -62,7 +62,7 @@ class ProgramsPage extends StatefulWidget {
 }
 
 class _ProgramsPageState extends State<ProgramsPage> {
-  bool _loading = false;
+  bool _loading = true;
   String? _errorMessage;
 
   Map<String, List<ProgramData>> _programsMap = {};
@@ -130,6 +130,17 @@ class _ProgramsPageState extends State<ProgramsPage> {
                   ranks: _univCsRank,
                 ),
               );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () {
+              setState(() {
+                _loading = true;
+              });
+              api.clearCache();
+              _loadUniversityNames();
+              _fetchPrograms();
             },
           ),
         ],
