@@ -54,56 +54,58 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       drawer: Drawer(
         child: SafeArea(
-          child: Column(
-            children: [
-              const DrawerHeader(
-                child: Text(
-                  'OpenSIST ',
-                  style: TextStyle(fontSize: 24),
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                const DrawerHeader(
+                  child: Text(
+                    'OpenSIST ',
+                    style: TextStyle(fontSize: 24),
+                  ),
                 ),
-              ),
-              ListTile(
-                leading: const Icon(Icons.home),
-                title: const Text('Useless Home'),
-                onTap: () {
-                  Navigator.pop(context); // close drawer
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.school),
-                title: const Text('Universities & Programs'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.pushNamed(context, '/opensist_programs');
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.notes),
-                title: const Text('Datapoints'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.pushNamed(context, '/opensist_datapoints');
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.people),
-                title: const Text('Applicants'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.pushNamed(context, '/opensist_applicants');
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.settings),
-                title: const Text('Settings'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.pushNamed(context, '/settings');
-                },
-              ),
-
-            ],
-          ),
+                ListTile(
+                  leading: const Icon(Icons.home),
+                  title: const Text('Useless Home'),
+                  onTap: () {
+                    Navigator.pop(context); // close drawer
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.school),
+                  title: const Text('Universities & Programs'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/opensist_programs');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.notes),
+                  title: const Text('Datapoints'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/opensist_datapoints');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.people),
+                  title: const Text('Applicants'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/opensist_applicants');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.settings),
+                  title: const Text('Settings'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/settings');
+                  },
+                ),
+              ],
+            ),
+          )
+          
         ),
       ),
       body: Center(
